@@ -1072,13 +1072,7 @@ async function openDebtor(id) {
   document.getElementById('d-due').textContent    = d.due_date ? new Date(d.due_date + 'T00:00:00').toLocaleDateString('en-ZA') : '—';
   document.getElementById('d-idnum').textContent  = d.id_number || '—';
 
-  const notesBlock = document.getElementById('d-notes-block');
-  if (d.notes) {
-    document.getElementById('d-notes').textContent = d.notes;
-    notesBlock.style.display = 'block';
-  } else {
-    notesBlock.style.display = 'none';
-  }
+  document.getElementById('d-notes').textContent = d.notes || '—';
 
   // Load call history
   try {
