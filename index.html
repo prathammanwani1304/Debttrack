@@ -1202,11 +1202,16 @@ async function deleteDebtor() {
 
 // ── LOG CALL ──────────────────────────────────────
 function openLogCall() {
-  document.getElementById('call-for').textContent      = 'Call with: ' + currentDebtor.name;
-  document.getElementById('call-outcome').value        = '';
-  document.getElementById('call-notes').value          = '';
-  closeOverlay('overlay-detail');
-  openOverlay('overlay-call');
+  try {
+    if (!currentDebtor) { toast('⚠️ Please open a debtor first', 'error'); return; }
+    document.getElementById('call-for').textContent = 'Call with: ' + currentDebtor.name;
+    document.getElementById('call-outcome').value   = '';
+    document.getElementById('call-notes').value     = '';
+    document.getElementById('overlay-detail').classList.remove('open');
+    document.getElementById('overlay-call').classList.add('open');
+  } catch(e) {
+    toast('❌ Error: ' + e.message, 'error');
+  }
 }
 
 async function saveCall() {
@@ -1228,19 +1233,26 @@ async function saveCall() {
 
 // ── RECORD PAYMENT ────────────────────────────────
 function openRecordPayment() {
-  document.getElementById('payment-for').textContent = 'Payment from: ' + currentDebtor.name;
-  document.getElementById('p-amount').value  = '';
-  document.getElementById('p-ref').value     = '';
-  document.getElementById('p-receipt').value = '';
-  document.getElementById('p-date').value    = new Date().toISOString().split('T')[0];
-  closeOverlay('overlay-detail');
-  openOverlay('overlay-payment');
+  try {
+    if (!currentDebtor) { toast('⚠️ Please open a debtor first', 'error'); return; }
+    document.getElementById('payment-for').textContent = 'Payment from: ' + currentDebtor.name;
+    document.getElementById('p-amount').value  = '';
+    document.getElementById('p-ref').value     = '';
+    document.getElementById('p-receipt').value = '';
+    document.getElementById('p-date').value    = new Date().toISOString().split('T')[0];
+    document.getElementById('overlay-detail').classList.remove('open');
+    document.getElementById('overlay-payment').classList.add('open');
+  } catch(e) {
+    toast('❌ Error: ' + e.message, 'error');
+  }
 }
 
 async function savePayment() {
   const amount = parseFloat(document.getElementById('p-amount').value);
   const date   = document.getElementById('p-date').value;
-  if (!amount || !date) { toast('⚠️ Please enter the amount and date', 'error'); return; }
+  if (!amount)  { toast('⚠️ Please enter the amount paid', 'error'); return; }
+  if (!date)    { toast('⚠️ Please select a payment date', 'error'); return; }
+  if (!currentDebtor) { toast('⚠️ No debtor selected', 'error'); return; }
   try {
     const receiptNum = document.getElementById('p-receipt').value.trim();
     await paymentsCol.add({
