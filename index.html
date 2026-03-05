@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="DebtTrack">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1B2B4B">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%231B2B4B'/%3E%3Crect x='18' y='18' width='144' height='144' rx='28' fill='%23C8860A'/%3E%3Ctext x='90' y='118' font-size='82' text-anchor='middle'%3E%F0%9F%92%BC%3C/text%3E%3C/svg%3E">
+<title>DebtTrack — Manwani Traders</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+// ── FIREBASE CONFIG ──────────────────────────────
+firebase.initializeApp({
+  apiKey:            "AIzaSyDS8YvvQMg9vJd07--0dBg8vevJv9JRnNQ",
+  authDomain:        "debttrack-mt.firebaseapp.com",
+  projectId:         "debttrack-mt",
+  storageBucket:     "debttrack-mt.firebasestorage.app",
+  messagingSenderId: "72116314942",
+  appId:             "1:72116314942:web:2ae7ef594664940607026f"
+});
+const db = firebase.firestore();
+</script>
+
+<style>
+:root {
+  --navy:    #1B2B4B;
+  --navy2:   #243660;
+  --gold:    #C8860A;
+  --gold-lt: #FFF4DC;
+  --teal:    #0E7C6E;
+  --teal-lt: #E6F6F4;
+  --red:     #C0292A;
+  --red-lt:  #FEF0F0;
+  --green:   #1A6B3C;
+  --grn-lt:  #EAF7EF;
+  --bg:      #F6F3EE;
+  --card:    #FFFFFF;
+  --border:  #DDD8CF;
+  --text:    #111111;
+  --muted:   #666666;
+  --shadow:  0 2px 20px rgba(0,0,0,0.08);
+  --shadow2: 0 8px 40px rgba(0,0,0,0.14);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 18px; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+h1,h2,h3 { font-family: 'Playfair Display', serif; }
+button { cursor: pointer; font-family: 'DM Sans', sans-serif; }
+input, select, textarea { font-family: 'DM Sans', sans-serif; }
+
+/* TOP BAR */
+.topbar {
+  background: var(--navy); padding: 0 32px; height: 72px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.25);
+}
+.brand { display: flex; align-items: center; gap: 14px; }
+.brand-icon {
+  width: 46px; height: 46px; background: var(--gold); border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; font-size: 22px;
+}
+.brand-name { font-family: 'Playfair Display', serif; font-size: 22px; color: white; font-weight: 700; }
+.brand-sub { font-size: 12px; color: rgba(255,255,255,0.55); letter-spacing: 1px; text-transform: uppercase; margin-top: 1px; }
+.topbar-date { color: rgba(255,255,255,0.6); font-size: 15px; font-weight: 500; text-align: right; }
+
+/* NAV TABS */
+.nav-bar {
+  background: var(--card); border-bottom: 2px solid var(--border);
+  display: flex; padding: 0 24px; gap: 4px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.nav-bar::-webkit-scrollbar { display: none; }
+.nav-tab {
+  padding: 0 20px; height: 58px; display: flex; align-items: center; gap: 9px;
+  font-size: 16px; font-weight: 600; color: var(--muted);
+  border: none; background: none; border-bottom: 3px solid transparent;
+  white-space: nowrap; transition: all .2s; flex-shrink: 0;
+}
+.nav-tab:hover { color: var(--navy); }
+.nav-tab.active { color: var(--navy); border-bottom-color: var(--gold); }
+.tab-icon { font-size: 20px; }
+.nav-badge {
+  background: var(--red); color: white; font-size: 11px; font-weight: 700;
+  padding: 2px 7px; border-radius: 100px; min-width: 22px; text-align: center;
+}
+
+/* MAIN */
+.main { max-width: 1100px; margin: 0 auto; padding: 32px 24px 80px; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* PAGE HEADER */
+.page-header {
+  margin-bottom: 28px; display: flex; align-items: flex-end;
+  justify-content: space-between; flex-wrap: wrap; gap: 16px;
+}
+.page-title { font-size: 34px; color: var(--navy); line-height: 1.1; }
+.page-sub { font-size: 16px; color: var(--muted); margin-top: 5px; }
+
+/* STATS */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 36px; }
+.stat-card { background: var(--card); border: 2px solid var(--border); border-radius: 20px; padding: 24px; box-shadow: var(--shadow); }
+.stat-card.red   { border-color: #F5A5A5; background: var(--red-lt); }
+.stat-card.gold  { border-color: #F0CC80; background: var(--gold-lt); }
+.stat-card.green { border-color: #8FD5AC; background: var(--grn-lt); }
+.stat-card.teal  { border-color: #8FD5CC; background: var(--teal-lt); }
+.stat-emoji { font-size: 32px; margin-bottom: 10px; }
+.stat-value { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 700; color: var(--navy); line-height: 1; margin-bottom: 6px; }
+.stat-card.red   .stat-value { color: var(--red); }
+.stat-card.gold  .stat-value { color: var(--gold); }
+.stat-card.green .stat-value { color: var(--green); }
+.stat-label { font-size: 15px; color: var(--muted); font-weight: 600; }
+
+/* BUTTONS */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 54px; padding: 0 26px; border-radius: 14px;
+  font-size: 17px; font-weight: 700; border: none;
+  transition: all .15s; white-space: nowrap; touch-action: manipulation;
+}
+.btn:active { transform: scale(0.97); }
+.btn-navy   { background: var(--navy); color: white; }
+.btn-navy:hover { background: var(--navy2); }
+.btn-gold   { background: var(--gold); color: white; }
+.btn-teal   { background: var(--teal); color: white; }
+.btn-red    { background: var(--red);  color: white; }
+.btn-outline { background: transparent; color: var(--navy); border: 2px solid var(--border); }
+.btn-outline:hover { border-color: var(--navy); }
+.btn-lg { height: 62px; font-size: 19px; padding: 0 32px; }
+
+/* SEARCH */
+.search-row { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+.search-box {
+  flex: 1; min-width: 240px; height: 54px; padding: 0 20px;
+  font-size: 17px; border: 2px solid var(--border); border-radius: 14px;
+  background: var(--card); color: var(--text); outline: none; -webkit-appearance: none;
+}
+.search-box:focus { border-color: var(--navy); }
+
+/* DEBTOR CARDS */
+.debtor-grid { display: flex; flex-direction: column; gap: 12px; }
+.debtor-card {
+  background: var(--card); border: 2px solid var(--border); border-radius: 18px;
+  padding: 22px 24px; display: flex; align-items: center; gap: 18px;
+  cursor: pointer; transition: all .15s; box-shadow: var(--shadow);
+}
+.debtor-card:hover { border-color: var(--navy); transform: translateY(-1px); box-shadow: var(--shadow2); }
+.debtor-avatar {
+  width: 56px; height: 56px; border-radius: 50%; font-family: 'Playfair Display', serif;
+  font-size: 20px; font-weight: 700; color: white;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  background: var(--navy);
+}
+.debtor-avatar.overdue { background: var(--red); }
+.debtor-avatar.pending { background: var(--gold); }
+.debtor-avatar.plan    { background: var(--teal); }
+.debtor-avatar.paid    { background: var(--green); }
+.debtor-info { flex: 1; min-width: 0; }
+.debtor-name { font-size: 20px; font-weight: 700; color: var(--navy); }
+.debtor-phone { font-size: 15px; color: var(--muted); margin-top: 3px; }
+.debtor-right { text-align: right; flex-shrink: 0; }
+.debtor-amount { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; }
+.debtor-amount.overdue { color: var(--red); }
+.debtor-amount.pending { color: var(--gold); }
+.debtor-amount.plan    { color: var(--teal); }
+.debtor-amount.paid    { color: var(--green); }
+.status-pill { display: inline-block; padding: 4px 12px; border-radius: 100px; font-size: 13px; font-weight: 700; margin-top: 6px; }
+.status-pill.overdue { background: var(--red-lt);  color: var(--red);   }
+.status-pill.pending { background: var(--gold-lt); color: var(--gold);  }
+.status-pill.plan    { background: var(--teal-lt); color: var(--teal);  }
+.status-pill.paid    { background: var(--grn-lt);  color: var(--green); }
+.debtor-chevron { color: var(--border); font-size: 28px; flex-shrink: 0; }
+
+/* SECTION LABEL */
+.section-label { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--navy); margin-bottom: 16px; margin-top: 8px; }
+
+/* FORM */
+.form-group { margin-bottom: 22px; }
+.form-label { display: block; font-size: 17px; font-weight: 700; color: var(--navy); margin-bottom: 9px; }
+.form-label .req { color: var(--red); }
+.form-input, .form-select, .form-textarea {
+  width: 100%; height: 58px; padding: 0 18px; font-size: 18px;
+  border: 2px solid var(--border); border-radius: 14px;
+  background: var(--card); color: var(--text); outline: none;
+  -webkit-appearance: none; transition: border-color .15s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--navy); }
+.form-textarea { height: auto; min-height: 110px; padding: 16px 18px; resize: none; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-card { background: var(--card); border: 2px solid var(--border); border-radius: 20px; padding: 32px; box-shadow: var(--shadow); max-width: 680px; }
+.form-actions { display: flex; gap: 12px; margin-top: 28px; flex-wrap: wrap; }
+.error-box {
+  display: none; background: var(--red-lt); border: 2px solid #F5A5A5;
+  border-radius: 14px; padding: 16px 20px; margin-bottom: 16px;
+  font-size: 16px; font-weight: 600; color: var(--red); line-height: 1.5;
+}
+
+/* MODAL */
+.overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55); z-index: 200;
+  align-items: flex-end; justify-content: center;
+}
+.overlay.open { display: flex; }
+.modal {
+  background: var(--card); border-radius: 28px 28px 0 0;
+  padding: 32px 30px 48px; width: 100%; max-width: 700px;
+  max-height: 92vh; overflow-y: auto; animation: slideUp .25s ease;
+}
+@media (min-width: 700px) {
+  .overlay { align-items: center; padding: 24px; }
+  .modal { border-radius: 24px; max-height: 88vh; }
+}
+@keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-handle { width: 44px; height: 5px; background: var(--border); border-radius: 100px; margin: 0 auto 26px; }
+.modal-title { font-family: 'Playfair Display', serif; font-size: 28px; color: var(--navy); margin-bottom: 6px; }
+.modal-sub { font-size: 16px; color: var(--muted); margin-bottom: 24px; }
+.modal-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+.info-block { background: var(--bg); border-radius: 14px; padding: 14px 18px; }
+.info-key { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); margin-bottom: 5px; }
+.info-val { font-size: 20px; font-weight: 700; color: var(--navy); }
+.info-val.big { font-family: 'Playfair Display', serif; font-size: 28px; color: var(--red); }
+.modal-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
+.modal-actions .btn { justify-content: center; }
+
+/* CALL LOG */
+.call-log-section { background: var(--bg); border-radius: 16px; padding: 18px 20px; margin-bottom: 8px; }
+.call-log-title { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 12px; }
+.call-entry { border-left: 3px solid var(--teal); padding: 8px 0 8px 14px; margin-bottom: 10px; }
+.call-entry:last-child { margin-bottom: 0; }
+.call-date { font-size: 13px; color: var(--muted); }
+.call-outcome { font-size: 16px; font-weight: 700; color: var(--navy); margin-top: 2px; }
+.call-note { font-size: 14px; color: var(--muted); margin-top: 3px; }
+
+/* PAYMENTS */
+.payment-card {
+  background: var(--card); border: 2px solid var(--border); border-radius: 16px;
+  padding: 18px 22px; display: flex; align-items: center;
+  justify-content: space-between; gap: 12px; box-shadow: var(--shadow); margin-bottom: 10px;
+}
+.payment-name { font-size: 18px; font-weight: 700; color: var(--navy); }
+.payment-meta { font-size: 14px; color: var(--muted); margin-top: 3px; }
+.payment-amount { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--green); white-space: nowrap; }
+
+/* REPORTS */
+.report-card { background: var(--card); border: 2px solid var(--border); border-radius: 20px; padding: 28px; box-shadow: var(--shadow); margin-bottom: 20px; }
+.report-row { margin-bottom: 18px; }
+.report-row-header { display: flex; justify-content: space-between; font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+.bar-track { height: 14px; background: var(--border); border-radius: 100px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 100px; transition: width .6s ease; }
+
+/* LOADING / EMPTY */
+.loading-box, .empty-box { text-align: center; padding: 60px 20px; color: var(--muted); }
+.spinner { width: 52px; height: 52px; border: 5px solid var(--border); border-top-color: var(--navy); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 18px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.empty-icon { font-size: 64px; margin-bottom: 14px; }
+.empty-text { font-size: 19px; }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+  background: var(--navy); color: white; padding: 16px 30px;
+  border-radius: 100px; font-size: 17px; font-weight: 700;
+  box-shadow: var(--shadow2); z-index: 999; display: none;
+  align-items: center; gap: 10px; white-space: nowrap;
+}
+.toast.show { display: flex; animation: toastIn .3s ease; }
+.toast.success { background: var(--teal); }
+.toast.error   { background: var(--red); }
+@keyframes toastIn { from { opacity:0; transform: translateX(-50%) translateY(12px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+
+/* RECEIPT PRINT */
+@media print {
+  body * { visibility: hidden !important; }
+  #receipt-print, #receipt-print * { visibility: visible !important; }
+  #receipt-print { position: fixed !important; top: 0; left: 0; width: 80mm; margin: 0; padding: 0; }
+  #statement-print, #statement-print * { visibility: visible !important; }
+  #statement-print { position: fixed !important; top: 0; left: 0; width: 100%; margin: 0; padding: 20px; }
+  #daily-report-print, #daily-report-print * { visibility: visible !important; }
+  #daily-report-print { position: fixed !important; top: 0; left: 0; width: 100%; margin: 0; padding: 20px; }
+}
+#receipt-print {
+  display: none;
+  width: 80mm;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  color: #000;
+  padding: 8px 6px;
+  background: white;
+}
+.rcpt-center { text-align: center; }
+.rcpt-title  { font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 2px; }
+.rcpt-sub    { font-size: 11px; text-align: center; color: #333; margin-bottom: 8px; }
+.rcpt-divider { border: none; border-top: 1px dashed #000; margin: 6px 0; }
+.rcpt-row    { display: flex; justify-content: space-between; margin: 3px 0; font-size: 13px; }
+.rcpt-row.bold { font-weight: bold; font-size: 14px; }
+.rcpt-footer { text-align: center; font-size: 11px; margin-top: 8px; color: #333; }
+.rcpt-thanks { text-align: center; font-size: 14px; font-weight: bold; margin-top: 6px; }
+
+/* LEDGER TABLE */
+.ledger-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.ledger-table th {
+  text-align: left; padding: 8px 10px; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 1px;
+  color: var(--muted); font-weight: 700;
+  border-bottom: 2px solid var(--border);
+  position: sticky; top: 0; background: var(--bg);
+}
+.ledger-table td { padding: 10px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.ledger-table tr:last-child td { border-bottom: none; }
+.ledger-table tr.bill-row  td { background: #fff8f8; }
+.ledger-table tr.pay-row   td { background: #f0fff7; }
+.ledger-row-type {
+  display: inline-block; padding: 3px 10px; border-radius: 100px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+}
+.ledger-row-type.bill { background: var(--red-lt);  color: var(--red); }
+.ledger-row-type.pay  { background: var(--grn-lt);  color: var(--green); }
+.ledger-ref { font-weight: 700; color: var(--navy); font-size: 13px; }
+.ledger-running { font-weight: 700; text-align: right; }
+.ledger-running.positive { color: var(--red); }
+.ledger-running.zero     { color: var(--green); }
+.ledger-delete {
+  background: none; border: none; color: var(--border);
+  font-size: 18px; cursor: pointer; padding: 4px;
+  border-radius: 6px; transition: color .15s;
+}
+.ledger-delete:hover { color: var(--red); }
+
+/* BOTTOM TABS (iPad / mobile) */
+.bottom-tabs {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: white;
+  border-top: 2px solid var(--border);
+  height: calc(68px + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 100;
+  justify-content: space-around;
+  align-items: stretch;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+}
+.btab {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 4px; border: none; background: none;
+  color: var(--muted); font-size: 11px; font-weight: 600;
+  padding: 8px 4px; cursor: pointer; transition: color .15s;
+  font-family: 'DM Sans', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+.btab .bicon { font-size: 24px; line-height: 1; }
+.btab.active { color: var(--navy); }
+.btab.active .bicon { transform: scale(1.1); }
+
+/* INSTALL BANNER */
+.install-banner {
+  display: none;
+  position: fixed; bottom: calc(68px + env(safe-area-inset-bottom) + 12px);
+  left: 16px; right: 16px;
+  background: var(--navy); color: white;
+  border-radius: 18px; padding: 16px 20px;
+  box-shadow: var(--shadow2); z-index: 200;
+  align-items: center; gap: 14px;
+  animation: toastIn .4s ease;
+}
+.install-banner.show { display: flex; }
+.install-icon { font-size: 36px; flex-shrink: 0; }
+.install-text { flex: 1; font-size: 15px; line-height: 1.5; }
+.install-text strong { display: block; font-size: 17px; margin-bottom: 2px; }
+.install-close {
+  background: rgba(255,255,255,0.2); border: none; color: white;
+  width: 32px; height: 32px; border-radius: 50%; font-size: 18px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0; font-family: 'DM Sans', sans-serif;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+  .nav-bar { display: none; }
+  .bottom-tabs { display: flex; }
+  .main { padding: 20px 16px calc(88px + env(safe-area-inset-bottom)); }
+}
+@media (max-width: 640px) {
+  .topbar { padding: 0 18px; height: 64px; }
+  .brand-name { font-size: 18px; }
+  .topbar-date { display: none; }
+  .page-title { font-size: 26px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .stat-value { font-size: 28px; }
+  .form-row { grid-template-columns: 1fr; }
+  .form-card { padding: 22px 18px; }
+  .modal-info-grid { grid-template-columns: 1fr; }
+}
+@media (min-width: 1025px) {
+  .nav-bar { display: flex; }
+  .bottom-tabs { display: none !important; }
+  .main { padding: 32px 24px 80px; }
+}
+@media (max-width: 380px) { .stats-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-icon">💼</div>
+    <div>
+      <div class="brand-name">DebtTrack</div>
+      <div class="brand-sub">Manwani Traders</div>
+    </div>
+  </div>
+  <div class="topbar-date" id="topbar-date"></div>
+</header>
+
+<!-- NAV TABS -->
+<nav class="nav-bar">
+  <button class="nav-tab active" onclick="showPage('dashboard')" id="tab-dashboard"><span class="tab-icon">🏠</span> Dashboard</button>
+  <button class="nav-tab" onclick="showPage('debtors')"   id="tab-debtors"><span class="tab-icon">👥</span> All Debtors <span class="nav-badge" id="badge-count">0</span></button>
+  <button class="nav-tab" onclick="showPage('add')"       id="tab-add"><span class="tab-icon">➕</span> Add Debtor</button>
+  <button class="nav-tab" onclick="showPage('payments')"  id="tab-payments"><span class="tab-icon">💳</span> Payments</button>
+  <button class="nav-tab" onclick="showPage('reports')"   id="tab-reports"><span class="tab-icon">📊</span> Reports</button>
+  <button class="nav-tab" onclick="showPage('followups')" id="tab-followups"><span class="tab-icon">📅</span> Follow-Ups</button>
+  <button class="nav-tab" onclick="showPage('activity')"  id="tab-activity"><span class="tab-icon">📋</span> Activity</button>
+</nav>
+
+<main class="main">
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Good day 👋</h1>
+        <div class="page-sub" id="dash-sub">Here is your collection overview</div>
+      </div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card red">  <div class="stat-emoji">⏰</div><div class="stat-value" id="s-overdue">—</div><div class="stat-label">Overdue Accounts</div></div>
+      <div class="stat-card gold"> <div class="stat-emoji">💰</div><div class="stat-value" id="s-outstanding">—</div><div class="stat-label">Total Outstanding</div></div>
+      <div class="stat-card green"><div class="stat-emoji">✅</div><div class="stat-value" id="s-collected">—</div><div class="stat-label">Collected This Month</div></div>
+      <div class="stat-card teal"> <div class="stat-emoji">👥</div><div class="stat-value" id="s-total">—</div><div class="stat-label">Total Debtors</div></div>
+    </div>
+    <!-- MONTHLY TARGET -->
+    <div class="report-card" style="margin-bottom:28px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+        <h2 style="font-size:20px;color:var(--navy)">🎯 Monthly Collection Target</h2>
+        <button class="btn btn-outline" style="height:42px;font-size:15px" onclick="openSetTarget()">Set Target</button>
+      </div>
+      <div id="target-display">
+        <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:600;margin-bottom:8px">
+          <span id="target-label">Target: not set</span>
+          <span id="target-pct" style="color:var(--teal)">0%</span>
+        </div>
+        <div class="bar-track" style="height:18px">
+          <div class="bar-fill" id="target-bar" style="width:0%;background:var(--teal)"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:14px;color:var(--muted);margin-top:6px">
+          <span>Collected: <strong id="target-collected">R 0</strong></span>
+          <span>Remaining: <strong id="target-remaining">—</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">⚠️ Needs Attention</div>
+    <div class="debtor-grid" id="dash-list"><div class="loading-box"><div class="spinner"></div><p>Loading...</p></div></div>
+  </div>
+
+  <!-- ALL DEBTORS -->
+  <div class="page" id="page-debtors">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">All Debtors</h1>
+        <div class="page-sub">Tap any debtor to view details, log a call, or record a payment</div>
+      </div>
+    </div>
+    <div class="search-row">
+      <input class="search-box" type="search" placeholder="🔍  Search by name or phone..." id="search-input" oninput="filterDebtors()">
+      <button class="btn btn-navy" onclick="showPage('add')">➕ Add New</button>
+    </div>
+    <div class="debtor-grid" id="all-list"><div class="loading-box"><div class="spinner"></div><p>Loading...</p></div></div>
+  </div>
+
+  <!-- ADD / EDIT DEBTOR -->
+  <div class="page" id="page-add">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title" id="add-page-title">Add New Debtor</h1>
+        <div class="page-sub">Fill in the details below and click Save</div>
+      </div>
+    </div>
+    <div class="form-card">
+      <input type="hidden" id="edit-id">
+      <div id="save-error" class="error-box"></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Full Name <span class="req">*</span></label>
+          <input class="form-input" id="f-name" type="text" placeholder="e.g. John Sithole">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input class="form-input" id="f-phone" type="tel" placeholder="e.g. 071 234 5678">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Amount Owed (R) <span class="req">*</span></label>
+          <input class="form-input" id="f-amount" type="number" placeholder="e.g. 5000" inputmode="decimal">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Due Date <span class="req">*</span></label>
+          <input class="form-input" id="f-due" type="date">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">ID Number</label>
+          <input class="form-input" id="f-idnum" type="text" placeholder="13-digit ID number" inputmode="numeric">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-select" id="f-status">
+            <option value="overdue">🔴 Overdue</option>
+            <option value="pending">🟡 Pending</option>
+            <option value="plan">🔵 Payment Plan</option>
+            <option value="paid">🟢 Paid</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="f-notes" placeholder="Any extra information about this debtor..."></textarea>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-navy btn-lg" onclick="saveDebtor()" id="save-btn">💾 Save Debtor</button>
+        <button class="btn btn-outline btn-lg" onclick="cancelEdit()">Cancel</button>
+        <button class="btn btn-red btn-lg" id="delete-btn" onclick="deleteDebtor()" style="display:none">🗑 Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAYMENTS -->
+  <div class="page" id="page-payments">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Payment Records</h1>
+        <div class="page-sub">All payments received across all debtors</div>
+      </div>
+    </div>
+    <div id="payments-list"><div class="loading-box"><div class="spinner"></div><p>Loading...</p></div></div>
+  </div>
+
+  <!-- REPORTS -->
+  <div class="page" id="page-reports">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Reports</h1>
+        <div class="page-sub">Your collection performance at a glance</div>
+      </div>
+    </div>
+    <div id="reports-content"><div class="loading-box"><div class="spinner"></div><p>Building report...</p></div></div>
+  </div>
+
+
+  <!-- FOLLOW-UPS PAGE -->
+  <div class="page" id="page-followups">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Follow-Ups 📅</h1>
+        <div class="page-sub">Debtors scheduled for a callback — sorted by urgency</div>
+      </div>
+    </div>
+    <div id="followups-list"><div class="loading-box"><div class="spinner"></div><p>Loading...</p></div></div>
+  </div>
+
+  <!-- ACTIVITY LOG PAGE -->
+  <div class="page" id="page-activity">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Activity Log 📋</h1>
+        <div class="page-sub">Everything that happened today</div>
+      </div>
+      <button class="btn btn-navy" onclick="printDailyReport()">🖨️ Print Daily Report</button>
+    </div>
+    <div id="activity-list"><div class="loading-box"><div class="spinner"></div><p>Loading...</p></div></div>
+  </div>
+
+</main>
+
+<!-- DEBTOR DETAIL MODAL -->
+<div class="overlay" id="overlay-detail">
+  <div class="modal" style="max-width:780px">
+    <div class="modal-handle"></div>
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+      <div class="debtor-avatar" id="d-avatar" style="width:64px;height:64px;font-size:24px;flex-shrink:0">—</div>
+      <div style="flex:1">
+        <h2 class="modal-title" style="margin-bottom:2px" id="d-name">—</h2>
+        <div style="color:var(--muted);font-size:15px" id="d-phone">—</div>
+      </div>
+      <div style="text-align:right">
+        <div class="debtor-amount" id="d-amt" style="font-size:28px">—</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:2px">Outstanding</div>
+      </div>
+    </div>
+
+    <!-- Info row -->
+    <div class="modal-info-grid" style="margin-bottom:16px">
+      <div class="info-block"><div class="info-key">📋 Status</div><div class="info-val" id="d-status">—</div></div>
+      <div class="info-block"><div class="info-key">📅 Due Date</div><div class="info-val" id="d-due">—</div></div>
+      <div class="info-block"><div class="info-key">🪪 ID Number</div><div class="info-val" id="d-idnum">—</div></div>
+      <div class="info-block"><div class="info-key">📝 Notes</div><div class="info-val" id="d-notes" style="font-size:15px;font-weight:500">—</div></div>
+    </div>
+
+    <!-- ACCOUNT LEDGER -->
+    <div style="background:var(--bg);border-radius:16px;padding:18px 20px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted)">📒 Account Ledger</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-gold" style="height:38px;font-size:14px;padding:0 14px" onclick="openAddBill()">＋ Add Bill</button>
+        </div>
+      </div>
+      <!-- Ledger summary -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+        <div style="background:var(--red-lt);border-radius:10px;padding:10px 14px;text-align:center">
+          <div style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:1px">Total Billed</div>
+          <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--red)" id="d-total-billed">R 0</div>
+        </div>
+        <div style="background:var(--grn-lt);border-radius:10px;padding:10px 14px;text-align:center">
+          <div style="font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:1px">Total Paid</div>
+          <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--green)" id="d-total-paid">R 0</div>
+        </div>
+        <div style="background:var(--gold-lt);border-radius:10px;padding:10px 14px;text-align:center">
+          <div style="font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:1px">Balance Due</div>
+          <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--gold)" id="d-balance-due">R 0</div>
+        </div>
+      </div>
+      <!-- Ledger table -->
+      <div id="d-ledger" style="max-height:280px;overflow-y:auto">
+        <em style="color:var(--muted);font-size:15px">No transactions yet.</em>
+      </div>
+    </div>
+
+    <!-- Call History -->
+    <div class="call-log-section">
+      <div class="call-log-title">📞 Call History</div>
+      <div id="d-calls"><em style="color:var(--muted);font-size:15px">No calls logged yet.</em></div>
+    </div>
+
+    <!-- Actions -->
+    <div class="modal-actions">
+      <button class="btn btn-teal btn-lg" onclick="openLogCall()">📞 Log a Call</button>
+      <button class="btn btn-navy btn-lg" onclick="openRecordPayment()">💳 Record a Payment</button>
+      <button class="btn btn-gold btn-lg" onclick="printStatement()">📄 Statement of Account</button>
+      <button class="btn btn-outline btn-lg" onclick="editCurrentDebtor()">✏️ Edit Details</button>
+      <button class="btn btn-outline btn-lg" onclick="closeOverlay('overlay-detail')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD BILL MODAL -->
+<div class="overlay" id="overlay-bill">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 class="modal-title">🧾 Add Credit Purchase</h2>
+    <div class="modal-sub" id="bill-for">Adding purchase to account</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Bill Number <span class="req">*</span></label>
+        <input class="form-input" id="b-number" type="text" placeholder="e.g. BILL-001" style="font-size:20px;font-weight:700">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date <span class="req">*</span></label>
+        <input class="form-input" id="b-date" type="date">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Amount (R) <span class="req">*</span></label>
+        <input class="form-input" id="b-amount" type="number" placeholder="e.g. 3500" inputmode="decimal">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <input class="form-input" id="b-desc" type="text" placeholder="e.g. Grocery items">
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-navy btn-lg" onclick="saveBill()">💾 Save Bill</button>
+      <button class="btn btn-outline btn-lg" onclick="closeOverlay('overlay-bill')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOG CALL MODAL -->
+<div class="overlay" id="overlay-call">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 class="modal-title">📞 Log a Call</h2>
+    <div class="modal-sub" id="call-for">Recording call outcome</div>
+    <div class="form-group">
+      <label class="form-label">What happened on this call? <span class="req">*</span></label>
+      <select class="form-select" id="call-outcome" style="height:58px">
+        <option value="">— Please choose —</option>
+        <option>✅ Agreed to pay in full</option>
+        <option>📅 Set up a payment plan</option>
+        <option>🤝 Promised to pay — date agreed</option>
+        <option>📵 No answer — left voicemail</option>
+        <option>📵 No answer — no voicemail</option>
+        <option>❌ Refused to pay</option>
+        <option>🔄 Call back requested</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes (optional)</label>
+      <textarea class="form-textarea" id="call-notes" placeholder="Add any extra details here..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Schedule a follow-up call</label>
+      <input class="form-input" id="call-followup" type="date">
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-navy btn-lg" onclick="saveCall()">💾 Save Call Record</button>
+      <button class="btn btn-outline btn-lg" onclick="closeOverlay('overlay-call')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- RECORD PAYMENT MODAL -->
+<div class="overlay" id="overlay-payment">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 class="modal-title">💳 Record a Payment</h2>
+    <div class="modal-sub" id="payment-for">Recording payment</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Amount Paid (R) <span class="req">*</span></label>
+        <input class="form-input" id="p-amount" type="number" placeholder="e.g. 2500" inputmode="decimal">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Payment Date <span class="req">*</span></label>
+        <input class="form-input" id="p-date" type="date">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Receipt Number <span class="req">*</span></label>
+        <input class="form-input" id="p-receipt" type="text" placeholder="e.g. RCP-001" style="font-size:20px;font-weight:700">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Payment Method</label>
+        <select class="form-select" id="p-method" style="height:58px">
+          <option>EFT / Bank Transfer</option>
+          <option>Cash</option>
+          <option>Card Payment</option>
+          <option>Debit Order</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Bank Reference / Notes</label>
+        <input class="form-input" id="p-ref" type="text" placeholder="Bank reference number">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Update this debtor's status to:</label>
+      <select class="form-select" id="p-status" style="height:58px">
+        <option value="plan">🔵 Still on Payment Plan (owes more)</option>
+        <option value="paid">🟢 Fully Paid — close account</option>
+        <option value="pending">🟡 Pending</option>
+      </select>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-navy btn-lg" onclick="savePayment()">💾 Save Payment</button>
+      <button class="btn btn-outline btn-lg" onclick="closeOverlay('overlay-payment')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- SET TARGET MODAL -->
+<div class="overlay" id="overlay-target">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 class="modal-title">🎯 Set Monthly Target</h2>
+    <div class="modal-sub">How much do you want to collect this month?</div>
+    <div class="form-group">
+      <label class="form-label">Target Amount (R) <span class="req">*</span></label>
+      <input class="form-input" id="target-input" type="number" placeholder="e.g. 50000" inputmode="decimal" style="font-size:24px;height:68px">
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-navy btn-lg" onclick="saveTarget()">💾 Save Target</button>
+      <button class="btn btn-outline btn-lg" onclick="closeOverlay('overlay-target')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- STATEMENT OF ACCOUNT (hidden, for printing/PDF) -->
+<div id="statement-print" style="display:none;font-family:'Courier New',monospace;padding:20px;max-width:700px;color:#000;background:white">
+  <div style="text-align:center;margin-bottom:16px">
+    <div style="font-size:22px;font-weight:bold">MANWANI TRADERS</div>
+    <div style="font-size:14px;margin-top:4px">STATEMENT OF ACCOUNT</div>
+    <div style="font-size:13px;color:#555;margin-top:4px" id="stmt-date">—</div>
+  </div>
+  <hr style="border:1px solid #000;margin:12px 0">
+  <table style="width:100%;font-size:14px;margin-bottom:12px">
+    <tr><td><strong>Debtor Name:</strong></td><td id="stmt-name">—</td></tr>
+    <tr><td><strong>Phone:</strong></td><td id="stmt-phone">—</td></tr>
+    <tr><td><strong>ID Number:</strong></td><td id="stmt-idnum">—</td></tr>
+    <tr><td><strong>Status:</strong></td><td id="stmt-status">—</td></tr>
+    <tr><td><strong>Outstanding Balance:</strong></td><td id="stmt-balance" style="font-weight:bold;color:#C0292A">—</td></tr>
+    <tr><td><strong>Due Date:</strong></td><td id="stmt-due">—</td></tr>
+  </table>
+  <hr style="border:1px solid #000;margin:12px 0">
+  <div style="font-weight:bold;font-size:15px;margin-bottom:8px">PAYMENT HISTORY</div>
+  <div id="stmt-payments"></div>
+  <hr style="border:1px solid #000;margin:12px 0">
+  <div style="font-weight:bold;font-size:15px;margin-bottom:8px">CALL HISTORY</div>
+  <div id="stmt-calls"></div>
+  <hr style="border:1px solid #000;margin:16px 0">
+  <div style="text-align:center;font-size:13px;color:#555">
+    This is a computer-generated statement. For queries contact Manwani Traders.
+  </div>
+</div>
+
+<!-- DAILY REPORT (hidden, for printing) -->
+<div id="daily-report-print" style="display:none;font-family:'Courier New',monospace;padding:20px;max-width:700px;color:#000;background:white">
+  <div style="text-align:center;margin-bottom:16px">
+    <div style="font-size:22px;font-weight:bold">MANWANI TRADERS</div>
+    <div style="font-size:16px;font-weight:bold;margin-top:4px">DAILY COLLECTION REPORT</div>
+    <div style="font-size:13px;color:#555;margin-top:4px" id="rpt-date">—</div>
+  </div>
+  <hr style="border:1px solid #000;margin:12px 0">
+  <table style="width:100%;font-size:14px;margin-bottom:12px">
+    <tr><td><strong>Total Collected Today:</strong></td><td id="rpt-collected" style="font-weight:bold;color:#1A6B3C;font-size:18px">—</td></tr>
+    <tr><td><strong>Payments Received:</strong></td><td id="rpt-pay-count">—</td></tr>
+    <tr><td><strong>Calls Logged:</strong></td><td id="rpt-call-count">—</td></tr>
+    <tr><td><strong>New Debtors Added:</strong></td><td id="rpt-new-count">—</td></tr>
+  </table>
+  <hr style="border:1px solid #000;margin:12px 0">
+  <div style="font-weight:bold;font-size:15px;margin-bottom:8px">PAYMENTS TODAY</div>
+  <div id="rpt-payments"></div>
+  <hr style="border:1px solid #000;margin:12px 0">
+  <div style="font-weight:bold;font-size:15px;margin-bottom:8px">CALLS TODAY</div>
+  <div id="rpt-calls"></div>
+  <hr style="border:1px solid #000;margin:16px 0">
+  <div style="text-align:center;font-size:13px;color:#555">End of Daily Report — Manwani Traders</div>
+</div>
+
+<!-- RECEIPT (hidden, for printing) -->
+<div id="receipt-print">
+  <div class="rcpt-title">MANWANI TRADERS</div>
+  <div class="rcpt-sub">Payment Receipt</div>
+  <hr class="rcpt-divider">
+  <div class="rcpt-row"><span>Receipt No:</span><span id="r-num">—</span></div>
+  <div class="rcpt-row"><span>Date:</span><span id="r-date">—</span></div>
+  <hr class="rcpt-divider">
+  <div class="rcpt-row"><span>Debtor:</span><span id="r-name">—</span></div>
+  <div class="rcpt-row"><span>Phone:</span><span id="r-phone">—</span></div>
+  <hr class="rcpt-divider">
+  <div class="rcpt-row bold"><span>Amount Paid:</span><span id="r-amount">—</span></div>
+  <div class="rcpt-row"><span>Method:</span><span id="r-method">—</span></div>
+  <div class="rcpt-row"><span>Reference:</span><span id="r-ref">—</span></div>
+  <div class="rcpt-row"><span>Balance Left:</span><span id="r-balance">—</span></div>
+  <hr class="rcpt-divider">
+  <div class="rcpt-footer">Printed: <span id="r-printed">—</span></div>
+  <div class="rcpt-thanks">Thank you for your payment!</div>
+  <br><br><br>
+</div>
+
+<!-- BOTTOM TABS (shown on mobile/iPad) -->
+<nav class="bottom-tabs" id="bottom-tabs">
+  <button class="btab active" onclick="showPage('dashboard')" id="btab-dashboard">
+    <span class="bicon">🏠</span>Dashboard
+  </button>
+  <button class="btab" onclick="showPage('debtors')" id="btab-debtors">
+    <span class="bicon">👥</span>Debtors
+  </button>
+  <button class="btab" onclick="showPage('add')" id="btab-add">
+    <span class="bicon">➕</span>Add
+  </button>
+  <button class="btab" onclick="showPage('payments')" id="btab-payments">
+    <span class="bicon">💳</span>Payments
+  </button>
+  <button class="btab" onclick="showPage('reports')" id="btab-reports">
+    <span class="bicon">📊</span>Reports
+  </button>
+  <button class="btab" onclick="showPage('followups')" id="btab-followups">
+    <span class="bicon">📅</span>Follow-Ups
+  </button>
+  <button class="btab" onclick="showPage('activity')" id="btab-activity">
+    <span class="bicon">📋</span>Activity
+  </button>
+</nav>
+
+<!-- INSTALL BANNER -->
+<div class="install-banner" id="install-banner">
+  <div class="install-icon">📲</div>
+  <div class="install-text">
+    <strong>Add to Home Screen</strong>
+    Tap <strong>Share</strong> then <strong>"Add to Home Screen"</strong> to install DebtTrack as an app on your iPad
+  </div>
+  <button class="install-close" onclick="dismissInstall()">✕</button>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ─────────────────────────────────────────
+let allDebtors   = [];
+let currentDebtor = null;
+
+// ── COLLECTIONS ───────────────────────────────────
+const debtorsCol  = db.collection('debtors');
+const callsCol    = db.collection('call_logs');
+const paymentsCol = db.collection('payments');
+
+// ── INIT ──────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-ZA', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  document.getElementById('topbar-date').textContent = dateStr;
+  document.getElementById('dash-sub').textContent    = dateStr;
+
+  const today    = now.toISOString().split('T')[0];
+  const tomorrow = new Date(now); tomorrow.setDate(now.getDate()+1);
+  document.getElementById('f-due').value          = today;
+  document.getElementById('p-date').value         = today;
+  document.getElementById('call-followup').value  = tomorrow.toISOString().split('T')[0];
+
+  loadDashboard();
+
+  // Show install banner on iPad/iPhone if not already installed
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone === true;
+  const dismissed = localStorage.getItem('install-dismissed');
+  if (isIOS && !isStandalone && !dismissed) {
+    setTimeout(() => {
+      document.getElementById('install-banner').classList.add('show');
+    }, 3000);
+  }
+});
+
+function dismissInstall() {
+  document.getElementById('install-banner').classList.remove('show');
+  localStorage.setItem('install-dismissed', '1');
+}
+
+// ── NAVIGATION ────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.btab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-'  + name).classList.add('active');
+  document.getElementById('tab-'   + name).classList.add('active');
+  const btab = document.getElementById('btab-' + name);
+  if (btab) btab.classList.add('active');
+  if (name === 'add' && !document.getElementById('edit-id').value) resetAddForm();
+  if (name === 'debtors')   loadAllDebtors();
+  if (name === 'payments')  loadPayments();
+  if (name === 'reports')   loadReports();
+  if (name === 'followups') loadFollowups();
+  if (name === 'activity')  loadActivity();
+  window.scrollTo(0, 0);
+}
+
+// ── FETCH ALL DEBTORS ─────────────────────────────
+async function fetchDebtors() {
+  try {
+    const snap = await debtorsCol.orderBy('amount_owed', 'desc').get();
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch(e) {
+    toast('❌ Could not load data: ' + e.message, 'error');
+    return [];
+  }
+}
+
+// ── DASHBOARD ─────────────────────────────────────
+async function loadDashboard() {
+  allDebtors = await fetchDebtors();
+
+  const overdue     = allDebtors.filter(d => d.status === 'overdue').length;
+  const outstanding = allDebtors.reduce((s,d) => s + (parseFloat(d.amount_owed)||0), 0);
+
+  // Collected this month
+  const monthStart = new Date(); monthStart.setDate(1);
+  const msStr      = monthStart.toISOString().split('T')[0];
+  let collected    = 0;
+  try {
+    const pSnap = await paymentsCol.where('payment_date', '>=', msStr).get();
+    pSnap.forEach(d => { collected += parseFloat(d.data().amount)||0; });
+  } catch(e) {}
+
+  document.getElementById('s-overdue').textContent     = overdue;
+  document.getElementById('s-outstanding').textContent = 'R ' + fmt(outstanding);
+  document.getElementById('s-collected').textContent   = 'R ' + fmt(collected);
+  document.getElementById('s-total').textContent       = allDebtors.length;
+  document.getElementById('badge-count').textContent   = allDebtors.length;
+
+  const urgent = allDebtors.filter(d => d.status === 'overdue' || d.status === 'pending').slice(0, 6);
+  renderDebtorList('dash-list', urgent, '🎉 No urgent accounts right now!');
+  updateTargetBar();
+}
+
+// ── ALL DEBTORS ───────────────────────────────────
+async function loadAllDebtors() {
+  allDebtors = await fetchDebtors();
+  renderDebtorList('all-list', allDebtors, 'No debtors yet. Tap ➕ Add Debtor to get started.');
+}
+
+function filterDebtors() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const filtered = allDebtors.filter(d =>
+    (d.name||'').toLowerCase().includes(q) || (d.phone||'').toLowerCase().includes(q)
+  );
+  renderDebtorList('all-list', filtered, 'No debtors match your search.');
+}
+
+function renderDebtorList(containerId, list, emptyMsg) {
+  const el = document.getElementById(containerId);
+  if (!list.length) {
+    el.innerHTML = `<div class="empty-box"><div class="empty-icon">👥</div><p class="empty-text">${emptyMsg}</p></div>`;
+    return;
+  }
+  const statusLabel = { overdue:'🔴 Overdue', pending:'🟡 Pending', plan:'🔵 Payment Plan', paid:'🟢 Paid' };
+  el.innerHTML = list.map(d => {
+    const init = (d.name||'??').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+    return `<div class="debtor-card" onclick="openDebtor('${d.id}')">
+      <div class="debtor-avatar ${d.status}">${esc(init)}</div>
+      <div class="debtor-info">
+        <div class="debtor-name">${esc(d.name)}</div>
+        <div class="debtor-phone">📞 ${esc(d.phone||'No phone')}</div>
+        <span class="status-pill ${d.status}">${statusLabel[d.status]||d.status}</span>
+      </div>
+      <div class="debtor-right">
+        <div class="debtor-amount ${d.status}">R ${fmt(d.amount_owed)}</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px">${d.due_date ? daysLabel(d.due_date) : ''}</div>
+      </div>
+      <div class="debtor-chevron">›</div>
+    </div>`;
+  }).join('');
+}
+
+// ── DEBTOR DETAIL ─────────────────────────────────
+async function openDebtor(id) {
+  currentDebtor = allDebtors.find(d => d.id === id);
+  if (!currentDebtor) {
+    const doc = await debtorsCol.doc(id).get();
+    if (!doc.exists) return;
+    currentDebtor = { id: doc.id, ...doc.data() };
+  }
+  const d = currentDebtor;
+  const statusLabel = { overdue:'🔴 Overdue', pending:'🟡 Pending', plan:'🔵 Payment Plan', paid:'🟢 Paid' };
+
+  document.getElementById('d-name').textContent   = d.name;
+  document.getElementById('d-phone').textContent  = '📞 ' + (d.phone || 'No phone number');
+  document.getElementById('d-amt').textContent    = 'R ' + fmt(d.amount_owed);
+  document.getElementById('d-status').textContent = statusLabel[d.status] || d.status;
+  document.getElementById('d-due').textContent    = d.due_date ? new Date(d.due_date + 'T00:00:00').toLocaleDateString('en-ZA') : '—';
+  document.getElementById('d-idnum').textContent  = d.id_number || '—';
+
+  const notesBlock = document.getElementById('d-notes-block');
+  if (d.notes) {
+    document.getElementById('d-notes').textContent = d.notes;
+    notesBlock.style.display = 'block';
+  } else {
+    notesBlock.style.display = 'none';
+  }
+
+  // Load call history
+  try {
+    const cSnap = await callsCol.where('debtor_id','==',id).orderBy('created_at','desc').get();
+    const callsEl = document.getElementById('d-calls');
+    if (cSnap.empty) {
+      callsEl.innerHTML = '<em style="color:var(--muted);font-size:15px">No calls logged yet.</em>';
+    } else {
+      callsEl.innerHTML = cSnap.docs.map(c => {
+        const cd = c.data();
+        const dt = cd.created_at?.toDate ? cd.created_at.toDate().toLocaleDateString('en-ZA',{day:'numeric',month:'short',year:'numeric'}) : cd.created_at || '';
+        return `<div class="call-entry">
+          <div class="call-date">${dt}</div>
+          <div class="call-outcome">${esc(cd.outcome)}</div>
+          ${cd.notes ? `<div class="call-note">${esc(cd.notes)}</div>` : ''}
+          ${cd.followup_date ? `<div class="call-note">📅 Follow-up: ${esc(cd.followup_date)}</div>` : ''}
+        </div>`;
+      }).join('');
+    }
+  } catch(e) {
+    document.getElementById('d-calls').innerHTML = '<em style="color:var(--muted)">Could not load call history.</em>';
+  }
+
+  openOverlay('overlay-detail');
+}
+
+// ── SAVE DEBTOR ───────────────────────────────────
+function showSaveError(msg) {
+  const el = document.getElementById('save-error');
+  el.textContent = '❌ ' + msg;
+  el.style.display = 'block';
+  el.scrollIntoView({ behavior:'smooth', block:'center' });
+}
+
+async function saveDebtor() {
+  document.getElementById('save-error').style.display = 'none';
+
+  const name   = document.getElementById('f-name').value.trim();
+  const amount = document.getElementById('f-amount').value;
+  const due    = document.getElementById('f-due').value;
+
+  if (!name)   { showSaveError('Please enter the debtor name.'); return; }
+  if (!amount) { showSaveError('Please enter the amount owed.'); return; }
+  if (!due)    { showSaveError('Please select a due date.'); return; }
+
+  const payload = {
+    name,
+    phone:       document.getElementById('f-phone').value.trim()  || '',
+    id_number:   document.getElementById('f-idnum').value.trim()  || '',
+    amount_owed: parseFloat(amount),
+    due_date:    due,
+    status:      document.getElementById('f-status').value,
+    notes:       document.getElementById('f-notes').value.trim()  || '',
+    updated_at:  firebase.firestore.FieldValue.serverTimestamp(),
+  };
+
+  const editId = document.getElementById('edit-id').value;
+  const btn    = document.getElementById('save-btn');
+  btn.textContent = 'Saving...'; btn.disabled = true;
+
+  try {
+    if (editId) {
+      await debtorsCol.doc(editId).update(payload);
+    } else {
+      payload.created_at = firebase.firestore.FieldValue.serverTimestamp();
+      await debtorsCol.add(payload);
+    }
+    btn.textContent = editId ? '💾 Update Debtor' : '💾 Save Debtor';
+    btn.disabled = false;
+    toast(editId ? '✅ Debtor updated!' : '✅ Debtor added!', 'success');
+    resetAddForm();
+    await loadDashboard();
+    showPage('debtors');
+  } catch(e) {
+    btn.textContent = editId ? '💾 Update Debtor' : '💾 Save Debtor';
+    btn.disabled = false;
+    showSaveError(e.message);
+  }
+}
+
+function resetAddForm() {
+  document.getElementById('edit-id').value     = '';
+  document.getElementById('add-page-title').textContent = 'Add New Debtor';
+  document.getElementById('save-btn').textContent       = '💾 Save Debtor';
+  document.getElementById('delete-btn').style.display   = 'none';
+  document.getElementById('save-error').style.display   = 'none';
+  ['f-name','f-phone','f-idnum','f-amount','f-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-due').value    = new Date().toISOString().split('T')[0];
+  document.getElementById('f-status').value = 'overdue';
+}
+
+function cancelEdit() { resetAddForm(); showPage('debtors'); }
+
+function editCurrentDebtor() {
+  closeOverlay('overlay-detail');
+  const d = currentDebtor;
+  document.getElementById('edit-id').value             = d.id;
+  document.getElementById('add-page-title').textContent = '✏️ Edit Debtor';
+  document.getElementById('save-btn').textContent       = '💾 Update Debtor';
+  document.getElementById('delete-btn').style.display   = 'inline-flex';
+  document.getElementById('f-name').value    = d.name        || '';
+  document.getElementById('f-phone').value   = d.phone       || '';
+  document.getElementById('f-idnum').value   = d.id_number   || '';
+  document.getElementById('f-amount').value  = d.amount_owed || '';
+  document.getElementById('f-due').value     = d.due_date    || '';
+  document.getElementById('f-status').value  = d.status      || 'overdue';
+  document.getElementById('f-notes').value   = d.notes       || '';
+  showPage('add');
+}
+
+async function deleteDebtor() {
+  if (!confirm('Delete ' + (currentDebtor?.name||'this debtor') + '? This cannot be undone.')) return;
+  try {
+    await debtorsCol.doc(document.getElementById('edit-id').value).delete();
+    toast('🗑 Debtor deleted', 'success');
+    resetAddForm();
+    await loadDashboard();
+    showPage('debtors');
+  } catch(e) { toast('❌ Could not delete: ' + e.message, 'error'); }
+}
+
+// ── LOG CALL ──────────────────────────────────────
+function openLogCall() {
+  document.getElementById('call-for').textContent      = 'Call with: ' + currentDebtor.name;
+  document.getElementById('call-outcome').value        = '';
+  document.getElementById('call-notes').value          = '';
+  closeOverlay('overlay-detail');
+  openOverlay('overlay-call');
+}
+
+async function saveCall() {
+  const outcome = document.getElementById('call-outcome').value;
+  if (!outcome) { toast('⚠️ Please choose what happened on the call', 'error'); return; }
+  try {
+    await callsCol.add({
+      debtor_id:     currentDebtor.id,
+      outcome,
+      notes:         document.getElementById('call-notes').value.trim(),
+      followup_date: document.getElementById('call-followup').value || '',
+      created_at:    firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    toast('✅ Call logged!', 'success');
+    closeOverlay('overlay-call');
+    await openDebtor(currentDebtor.id);
+  } catch(e) { toast('❌ Could not save call: ' + e.message, 'error'); }
+}
+
+// ── RECORD PAYMENT ────────────────────────────────
+function openRecordPayment() {
+  document.getElementById('payment-for').textContent = 'Payment from: ' + currentDebtor.name;
+  document.getElementById('p-amount').value  = '';
+  document.getElementById('p-ref').value     = '';
+  document.getElementById('p-receipt').value = '';
+  document.getElementById('p-date').value    = new Date().toISOString().split('T')[0];
+  closeOverlay('overlay-detail');
+  openOverlay('overlay-payment');
+}
+
+async function savePayment() {
+  const amount = parseFloat(document.getElementById('p-amount').value);
+  const date   = document.getElementById('p-date').value;
+  if (!amount || !date) { toast('⚠️ Please enter the amount and date', 'error'); return; }
+  try {
+    const receiptNum = document.getElementById('p-receipt').value.trim();
+    await paymentsCol.add({
+      debtor_id:      currentDebtor.id,
+      debtor_name:    currentDebtor.name,
+      amount,
+      payment_date:   date,
+      receipt_number: receiptNum || ('RCP-' + Date.now().toString().slice(-6)),
+      method:         document.getElementById('p-method').value,
+      reference:      document.getElementById('p-ref').value.trim(),
+      created_at:     firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    const newAmt    = Math.max(0, (parseFloat(currentDebtor.amount_owed)||0) - amount);
+    const newStatus = document.getElementById('p-status').value;
+    await debtorsCol.doc(currentDebtor.id).update({ amount_owed: newAmt, status: newStatus });
+    currentDebtor.amount_owed = newAmt;
+    currentDebtor.status      = newStatus;
+    toast('✅ Payment saved! Printing receipt...', 'success');
+    closeOverlay('overlay-payment');
+    printReceipt({
+      name:           currentDebtor.name,
+      phone:          currentDebtor.phone || '—',
+      amount,
+      receipt_number: document.getElementById('p-receipt').value.trim() || null,
+      method:         document.getElementById('p-method').value,
+      ref:            document.getElementById('p-ref').value.trim() || '—',
+      balance:        Math.max(0, (parseFloat(currentDebtor.amount_owed)||0) - amount),
+      date:           date,
+    });
+    await loadDashboard();
+    await openDebtor(currentDebtor.id);
+  } catch(e) { toast('❌ Could not save payment: ' + e.message, 'error'); }
+}
+
+// ── PAYMENTS PAGE ─────────────────────────────────
+async function loadPayments() {
+  const el = document.getElementById('payments-list');
+  try {
+    const snap = await paymentsCol.orderBy('payment_date','desc').get();
+    if (snap.empty) {
+      el.innerHTML = '<div class="empty-box"><div class="empty-icon">💳</div><p class="empty-text">No payments recorded yet.</p></div>';
+      return;
+    }
+    el.innerHTML = snap.docs.map(d => {
+      const p = d.data();
+      return `<div class="payment-card">
+        <div>
+          <div class="payment-name">${esc(p.debtor_name||'—')}</div>
+          <div class="payment-meta">${esc(p.method||'')}${p.reference ? ' · ' + esc(p.reference) : ''} · ${p.payment_date||''}</div>
+        </div>
+        <div class="payment-amount">R ${fmt(p.amount)}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = `<div class="empty-box"><p class="empty-text">❌ Could not load payments: ${e.message}</p></div>`;
+  }
+}
+
+// ── REPORTS PAGE ──────────────────────────────────
+async function loadReports() {
+  const debtors = await fetchDebtors();
+  let totalPay  = 0;
+  try {
+    const snap = await paymentsCol.get();
+    snap.forEach(d => { totalPay += parseFloat(d.data().amount)||0; });
+  } catch(e) {}
+
+  const totalOwed = debtors.reduce((s,d) => s + (parseFloat(d.amount_owed)||0), 0);
+  const byStatus  = { overdue:0, pending:0, plan:0, paid:0 };
+  debtors.forEach(d => { if (d.status in byStatus) byStatus[d.status]++; });
+  const total = debtors.length || 1;
+
+  document.getElementById('reports-content').innerHTML = `
+    <div class="stats-grid" style="margin-bottom:24px">
+      <div class="stat-card gold"> <div class="stat-emoji">💰</div><div class="stat-value">R ${fmt(totalOwed)}</div><div class="stat-label">Total Outstanding</div></div>
+      <div class="stat-card green"><div class="stat-emoji">✅</div><div class="stat-value">R ${fmt(totalPay)}</div><div class="stat-label">Total Collected (All Time)</div></div>
+      <div class="stat-card red">  <div class="stat-emoji">⏰</div><div class="stat-value">${byStatus.overdue}</div><div class="stat-label">Overdue Accounts</div></div>
+      <div class="stat-card teal"> <div class="stat-emoji">🔵</div><div class="stat-value">${byStatus.plan}</div><div class="stat-label">On Payment Plans</div></div>
+    </div>
+    <div class="report-card">
+      <h2 style="font-size:22px;color:var(--navy);margin-bottom:22px">Account Status Breakdown</h2>
+      ${rBar('🔴 Overdue',      byStatus.overdue,  total, 'var(--red)')}
+      ${rBar('🟡 Pending',      byStatus.pending,  total, 'var(--gold)')}
+      ${rBar('🔵 Payment Plan', byStatus.plan,     total, 'var(--teal)')}
+      ${rBar('🟢 Paid',         byStatus.paid,     total, 'var(--green)')}
+    </div>`;
+}
+
+function rBar(label, count, total, color) {
+  const pct = Math.round(count/total*100);
+  return `<div class="report-row">
+    <div class="report-row-header"><span>${label}</span><span>${count} accounts (${pct}%)</span></div>
+    <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div>
+  </div>`;
+}
+
+// ── PRINT RECEIPT ────────────────────────────────
+function printReceipt(p) {
+  // Generate receipt number: date + random
+  const now     = new Date();
+  const rcptNum = p.receipt_number ||
+    ('RCP-' + now.getFullYear().toString().slice(2) +
+    String(now.getMonth()+1).padStart(2,'0') +
+    String(now.getDate()).padStart(2,'0') + '-' +
+    Math.floor(Math.random()*9000+1000));
+  const printed = now.toLocaleDateString('en-ZA', {
+    day:'numeric', month:'short', year:'numeric',
+    hour:'2-digit', minute:'2-digit'
+  });
+
+  document.getElementById('r-num').textContent     = rcptNum;
+  document.getElementById('r-date').textContent    = p.date;
+  document.getElementById('r-name').textContent    = p.name;
+  document.getElementById('r-phone').textContent   = p.phone;
+  document.getElementById('r-amount').textContent  = 'R ' + fmt(p.amount);
+  document.getElementById('r-method').textContent  = p.method;
+  document.getElementById('r-ref').textContent     = p.ref || '—';
+  document.getElementById('r-balance').textContent = 'R ' + fmt(p.balance);
+  document.getElementById('r-printed').textContent = printed;
+
+  // Show receipt div, print, then hide
+  const el = document.getElementById('receipt-print');
+  el.style.display = 'block';
+  setTimeout(() => {
+    window.print();
+    el.style.display = 'none';
+  }, 200);
+}
+
+// ── OVERLAYS ──────────────────────────────────────
+function openOverlay(id)  { document.getElementById(id).classList.add('open'); }
+function closeOverlay(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.overlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); });
+});
+
+// ── MONTHLY TARGET ───────────────────────────────
+function openSetTarget() {
+  const current = localStorage.getItem('monthly-target') || '';
+  document.getElementById('target-input').value = current;
+  openOverlay('overlay-target');
+}
+function saveTarget() {
+  const val = parseFloat(document.getElementById('target-input').value);
+  if (!val) { toast('⚠️ Please enter a target amount', 'error'); return; }
+  localStorage.setItem('monthly-target', val);
+  closeOverlay('overlay-target');
+  updateTargetBar();
+  toast('✅ Target saved!', 'success');
+}
+async function updateTargetBar() {
+  const target = parseFloat(localStorage.getItem('monthly-target') || 0);
+  const monthStart = new Date(); monthStart.setDate(1);
+  const msStr = monthStart.toISOString().split('T')[0];
+  let collected = 0;
+  try {
+    const pSnap = await paymentsCol.where('payment_date','>=',msStr).get();
+    pSnap.forEach(d => { collected += parseFloat(d.data().amount)||0; });
+  } catch(e) {}
+
+  document.getElementById('target-collected').textContent = 'R ' + fmt(collected);
+
+  if (!target) {
+    document.getElementById('target-label').textContent = 'Target: not set — click Set Target';
+    document.getElementById('target-pct').textContent   = '';
+    document.getElementById('target-bar').style.width   = '0%';
+    document.getElementById('target-remaining').textContent = '—';
+    return;
+  }
+  const pct = Math.min(100, Math.round(collected / target * 100));
+  document.getElementById('target-label').textContent     = 'Target: R ' + fmt(target);
+  document.getElementById('target-pct').textContent       = pct + '%';
+  document.getElementById('target-bar').style.width       = pct + '%';
+  document.getElementById('target-bar').style.background  = pct >= 100 ? 'var(--green)' : pct >= 60 ? 'var(--teal)' : 'var(--gold)';
+  document.getElementById('target-remaining').textContent = pct >= 100 ? '🎉 Target reached!' : 'R ' + fmt(Math.max(0, target - collected)) + ' to go';
+}
+
+// ── FOLLOW-UPS PAGE ───────────────────────────────
+async function loadFollowups() {
+  const el = document.getElementById('followups-list');
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const snap  = await callsCol.where('followup_date','!=','').orderBy('followup_date','asc').get();
+    const items = [];
+    snap.forEach(d => {
+      const data = d.data();
+      if (data.followup_date) items.push({ id: d.id, ...data });
+    });
+
+    if (!items.length) {
+      el.innerHTML = '<div class="empty-box"><div class="empty-icon">📅</div><p class="empty-text">No follow-ups scheduled.</p></div>';
+      return;
+    }
+
+    // Group: overdue, today, upcoming
+    const overdue  = items.filter(i => i.followup_date < today);
+    const todayArr = items.filter(i => i.followup_date === today);
+    const upcoming = items.filter(i => i.followup_date > today);
+
+    let html = '';
+    if (overdue.length) {
+      html += '<div class="section-label" style="color:var(--red)">🔴 Overdue Follow-Ups</div>';
+      html += overdue.map(i => followupCard(i, 'overdue')).join('');
+    }
+    if (todayArr.length) {
+      html += '<div class="section-label" style="color:var(--teal)">📅 Due Today</div>';
+      html += todayArr.map(i => followupCard(i, 'today')).join('');
+    }
+    if (upcoming.length) {
+      html += '<div class="section-label">🔜 Upcoming</div>';
+      html += upcoming.map(i => followupCard(i, 'upcoming')).join('');
+    }
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div class="empty-box"><p>❌ Could not load follow-ups: ' + e.message + '</p></div>';
+  }
+}
+
+function followupCard(item, type) {
+  const borderColor = type === 'overdue' ? 'var(--red)' : type === 'today' ? 'var(--teal)' : 'var(--border)';
+  const debtor = allDebtors.find(d => d.id === item.debtor_id);
+  const name   = debtor ? debtor.name : 'Unknown Debtor';
+  return `<div class="debtor-card" style="border-color:${borderColor};cursor:pointer" onclick="openDebtor('${item.debtor_id}')">
+    <div class="debtor-avatar" style="background:${borderColor === 'var(--border)' ? 'var(--navy)' : borderColor}">📞</div>
+    <div class="debtor-info">
+      <div class="debtor-name">${esc(name)}</div>
+      <div class="debtor-phone" style="margin-top:4px">${esc(item.outcome)}</div>
+      ${item.notes ? `<div style="font-size:13px;color:var(--muted);margin-top:2px">${esc(item.notes)}</div>` : ''}
+    </div>
+    <div class="debtor-right">
+      <div style="font-size:15px;font-weight:700;color:${borderColor}">📅 ${item.followup_date}</div>
+    </div>
+    <div class="debtor-chevron">›</div>
+  </div>`;
+}
+
+// ── ACTIVITY LOG PAGE ─────────────────────────────
+async function loadActivity() {
+  const el = document.getElementById('activity-list');
+  const today = new Date().toISOString().split('T')[0];
+  try {
+    // Get today's payments
+    const paySnap = await paymentsCol.where('payment_date','==',today).orderBy('created_at','desc').get();
+    const payments = paySnap.docs.map(d => ({ id:d.id, type:'payment', ...d.data() }));
+
+    // Get today's calls (by created_at date)
+    const startOfDay = new Date(); startOfDay.setHours(0,0,0,0);
+    const callSnap   = await callsCol.where('created_at','>=', startOfDay).orderBy('created_at','desc').get();
+    const calls      = callSnap.docs.map(d => ({ id:d.id, type:'call', ...d.data() }));
+
+    // Get today's new debtors
+    const debSnap = await debtorsCol.where('created_at','>=', startOfDay).get();
+    const newDebtors = debSnap.docs.map(d => ({ id:d.id, type:'debtor', ...d.data() }));
+
+    const totalCollected = payments.reduce((s,p) => s + (parseFloat(p.amount)||0), 0);
+
+    let html = '';
+
+    // Summary bar
+    html += `<div class="stats-grid" style="margin-bottom:24px">
+      <div class="stat-card green"><div class="stat-emoji">💰</div><div class="stat-value">R ${fmt(totalCollected)}</div><div class="stat-label">Collected Today</div></div>
+      <div class="stat-card teal"><div class="stat-emoji">💳</div><div class="stat-value">${payments.length}</div><div class="stat-label">Payments Today</div></div>
+      <div class="stat-card"><div class="stat-emoji">📞</div><div class="stat-value">${calls.length}</div><div class="stat-label">Calls Logged Today</div></div>
+      <div class="stat-card"><div class="stat-emoji">👤</div><div class="stat-value">${newDebtors.length}</div><div class="stat-label">New Debtors Today</div></div>
+    </div>`;
+
+    // Payments section
+    html += '<div class="section-label">💳 Payments Today</div>';
+    if (!payments.length) {
+      html += '<div class="empty-box" style="padding:20px"><p class="empty-text">No payments recorded today.</p></div>';
+    } else {
+      html += payments.map(p => `<div class="payment-card">
+        <div><div class="payment-name">${esc(p.debtor_name||'—')}</div>
+        <div class="payment-meta">${esc(p.method||'')}${p.reference?' · '+esc(p.reference):''}</div></div>
+        <div class="payment-amount">R ${fmt(p.amount)}</div>
+      </div>`).join('');
+    }
+
+    // Calls section
+    html += '<div class="section-label" style="margin-top:24px">📞 Calls Logged Today</div>';
+    if (!calls.length) {
+      html += '<div class="empty-box" style="padding:20px"><p class="empty-text">No calls logged today.</p></div>';
+    } else {
+      html += '<div style="display:flex;flex-direction:column;gap:10px">' + calls.map(c => {
+        const debtor = allDebtors.find(d => d.id === c.debtor_id);
+        return `<div class="debtor-card" onclick="openDebtor('${c.debtor_id}')">
+          <div class="debtor-avatar" style="background:var(--teal)">📞</div>
+          <div class="debtor-info">
+            <div class="debtor-name">${esc(debtor?.name || 'Unknown')}</div>
+            <div class="debtor-phone">${esc(c.outcome)}</div>
+            ${c.notes ? `<div style="font-size:13px;color:var(--muted)">${esc(c.notes)}</div>` : ''}
+          </div>
+          <div class="debtor-chevron">›</div>
+        </div>`;
+      }).join('') + '</div>';
+    }
+
+    // New debtors section
+    if (newDebtors.length) {
+      html += '<div class="section-label" style="margin-top:24px">👤 New Debtors Added Today</div>';
+      html += '<div class="debtor-grid">' + newDebtors.map(d => `
+        <div class="debtor-card" onclick="openDebtor('${d.id}')">
+          <div class="debtor-avatar ${d.status}">${esc((d.name||'??').split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase())}</div>
+          <div class="debtor-info">
+            <div class="debtor-name">${esc(d.name)}</div>
+            <div class="debtor-phone">📞 ${esc(d.phone||'No phone')}</div>
+          </div>
+          <div class="debtor-right"><div class="debtor-amount ${d.status}">R ${fmt(d.amount_owed)}</div></div>
+          <div class="debtor-chevron">›</div>
+        </div>`).join('') + '</div>';
+    }
+
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div class="empty-box"><p>❌ Could not load activity: ' + e.message + '</p></div>';
+  }
+}
+
+// ── STATEMENT OF ACCOUNT ──────────────────────────
+async function printStatement() {
+  const d = currentDebtor;
+  if (!d) return;
+  closeOverlay('overlay-detail');
+
+  const statusLabel = { overdue:'Overdue', pending:'Pending', plan:'Payment Plan', paid:'Paid' };
+  document.getElementById('stmt-date').textContent    = 'Generated: ' + new Date().toLocaleDateString('en-ZA', {day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('stmt-name').textContent    = d.name;
+  document.getElementById('stmt-phone').textContent   = d.phone || '—';
+  document.getElementById('stmt-idnum').textContent   = d.id_number || '—';
+  document.getElementById('stmt-status').textContent  = statusLabel[d.status] || d.status;
+  document.getElementById('stmt-balance').textContent = 'R ' + fmt(d.amount_owed);
+  document.getElementById('stmt-due').textContent     = d.due_date || '—';
+
+  // Load bills + payments
+  try {
+    const [bSnap, pSnap] = await Promise.all([
+      billsCol.where('debtor_id','==',d.id).orderBy('date','asc').get(),
+      paymentsCol.where('debtor_id','==',d.id).orderBy('payment_date','asc').get(),
+    ]);
+    // Bills table
+    if (bSnap.empty) {
+      document.getElementById('stmt-payments').innerHTML = '<p style="color:#555;font-size:13px">No bills recorded.</p>';
+    } else {
+      let totalB = 0;
+      const bRows = bSnap.docs.map(doc => {
+        const b = doc.data(); totalB += parseFloat(b.amount)||0;
+        return `<tr><td>${b.date||'—'}</td><td style="font-weight:bold">${esc(b.bill_number||'—')}</td><td>${esc(b.description||'—')}</td><td style="text-align:right;font-weight:bold">R ${fmt(b.amount)}</td></tr>`;
+      }).join('');
+      document.getElementById('stmt-payments').innerHTML =
+        `<div style="font-weight:bold;font-size:14px;margin-bottom:6px">Credit Purchases (Bills)</div>
+        <table style="width:100%;font-size:12px;border-collapse:collapse">
+          <thead><tr style="border-bottom:1px solid #000"><th style="text-align:left">Date</th><th style="text-align:left">Bill No.</th><th style="text-align:left">Description</th><th style="text-align:right">Amount</th></tr></thead>
+          <tbody>${bRows}</tbody>
+          <tfoot><tr style="border-top:1px solid #000"><td colspan="3"><strong>Total Billed</strong></td><td style="text-align:right;font-weight:bold">R ${fmt(totalB)}</td></tr></tfoot>
+        </table>
+        <br>` +
+        (pSnap.empty ? '<p style="color:#555;font-size:13px">No payments recorded.</p>' : (() => {
+          let totalP = 0;
+          const pRows = pSnap.docs.map(doc => {
+            const p = doc.data(); totalP += parseFloat(p.amount)||0;
+            return `<tr><td>${p.payment_date||'—'}</td><td style="font-weight:bold">${esc(p.receipt_number||p.reference||'—')}</td><td>${esc(p.method||'—')}</td><td style="text-align:right;font-weight:bold;color:green">R ${fmt(p.amount)}</td></tr>`;
+          }).join('');
+          return `<div style="font-weight:bold;font-size:14px;margin-bottom:6px">Payments Received</div>
+            <table style="width:100%;font-size:12px;border-collapse:collapse">
+              <thead><tr style="border-bottom:1px solid #000"><th style="text-align:left">Date</th><th style="text-align:left">Receipt No.</th><th style="text-align:left">Method</th><th style="text-align:right">Amount</th></tr></thead>
+              <tbody>${pRows}</tbody>
+              <tfoot><tr style="border-top:1px solid #000;border-bottom:2px solid #000"><td colspan="3"><strong>Balance Due</strong></td><td style="text-align:right;font-weight:bold;color:red">R ${fmt(Math.max(0,totalB-totalP))}</td></tr></tfoot>
+            </table>`;
+        })());
+    }
+  } catch(e) {}
+
+  // Load calls
+  try {
+    const cSnap = await callsCol.where('debtor_id','==',d.id).orderBy('created_at','desc').get();
+    if (cSnap.empty) {
+      document.getElementById('stmt-calls').innerHTML = '<p style="color:#555;font-size:13px">No calls recorded.</p>';
+    } else {
+      document.getElementById('stmt-calls').innerHTML = `<table style="width:100%;font-size:13px;border-collapse:collapse">
+        <thead><tr style="border-bottom:1px solid #000"><th style="text-align:left">Date</th><th style="text-align:left">Outcome</th><th style="text-align:left">Notes</th></tr></thead>
+        <tbody>${cSnap.docs.map(doc => {
+          const c = doc.data();
+          const dt = c.created_at?.toDate ? c.created_at.toDate().toLocaleDateString('en-ZA') : '—';
+          return `<tr><td>${dt}</td><td>${esc(c.outcome)}</td><td>${esc(c.notes||'—')}</td></tr>`;
+        }).join('')}</tbody>
+      </table>`;
+    }
+  } catch(e) {}
+
+  const el = document.getElementById('statement-print');
+  el.style.display = 'block';
+  setTimeout(() => { window.print(); el.style.display = 'none'; }, 300);
+}
+
+// ── DAILY COLLECTION REPORT ───────────────────────
+async function printDailyReport() {
+  const today    = new Date().toISOString().split('T')[0];
+  const startOfDay = new Date(); startOfDay.setHours(0,0,0,0);
+  const dateStr  = new Date().toLocaleDateString('en-ZA', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+  document.getElementById('rpt-date').textContent = dateStr;
+
+  try {
+    const paySnap  = await paymentsCol.where('payment_date','==',today).get();
+    const callSnap = await callsCol.where('created_at','>=',startOfDay).get();
+    const debSnap  = await debtorsCol.where('created_at','>=',startOfDay).get();
+
+    const payments   = paySnap.docs.map(d => d.data());
+    const calls      = callSnap.docs.map(d => d.data());
+    const newDebtors = debSnap.docs.map(d => d.data());
+    const total      = payments.reduce((s,p) => s + (parseFloat(p.amount)||0), 0);
+
+    document.getElementById('rpt-collected').textContent  = 'R ' + fmt(total);
+    document.getElementById('rpt-pay-count').textContent  = payments.length;
+    document.getElementById('rpt-call-count').textContent = calls.length;
+    document.getElementById('rpt-new-count').textContent  = newDebtors.length;
+
+    document.getElementById('rpt-payments').innerHTML = !payments.length
+      ? '<p style="color:#555;font-size:13px">No payments today.</p>'
+      : `<table style="width:100%;font-size:13px;border-collapse:collapse">
+          <thead><tr style="border-bottom:1px solid #000"><th style="text-align:left">Debtor</th><th style="text-align:left">Method</th><th style="text-align:right">Amount</th></tr></thead>
+          <tbody>${payments.map(p => `<tr><td>${esc(p.debtor_name||'—')}</td><td>${esc(p.method||'—')}</td><td style="text-align:right">R ${fmt(p.amount)}</td></tr>`).join('')}</tbody>
+          <tfoot><tr style="border-top:1px solid #000"><td colspan="2"><strong>Total</strong></td><td style="text-align:right;font-weight:bold">R ${fmt(total)}</td></tr></tfoot>
+        </table>`;
+
+    document.getElementById('rpt-calls').innerHTML = !calls.length
+      ? '<p style="color:#555;font-size:13px">No calls logged today.</p>'
+      : `<table style="width:100%;font-size:13px;border-collapse:collapse">
+          <thead><tr style="border-bottom:1px solid #000"><th style="text-align:left">Debtor ID</th><th style="text-align:left">Outcome</th></tr></thead>
+          <tbody>${calls.map(c => `<tr><td>${esc(c.debtor_id?.substring(0,8)||'—')}</td><td>${esc(c.outcome)}</td></tr>`).join('')}</tbody>
+        </table>`;
+
+  } catch(e) {
+    toast('❌ Could not generate report: ' + e.message, 'error');
+    return;
+  }
+
+  const el = document.getElementById('daily-report-print');
+  el.style.display = 'block';
+  setTimeout(() => { window.print(); el.style.display = 'none'; }, 300);
+}
+
+// ── UTILITIES ─────────────────────────────────────
+function fmt(n) {
+  return parseFloat(n||0).toLocaleString('en-ZA', { minimumFractionDigits:0, maximumFractionDigits:0 });
+}
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function daysLabel(dateStr) {
+  const diff = Math.round((new Date() - new Date(dateStr + 'T00:00:00')) / 86400000);
+  if (diff > 0)  return diff + ' days overdue';
+  if (diff === 0) return 'Due today';
+  return 'Due in ' + Math.abs(diff) + ' days';
+}
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 3200);
+}
+</script>
+</body>
+</html>
