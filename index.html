@@ -1450,7 +1450,7 @@ function resetAddForm(){
   var sb = document.getElementById('save-btn'); if(sb){ sb.textContent='💾 Save Debtor'; sb.disabled=false; }
   var db = document.getElementById('del-btn');  if(db) db.style.display='none';
   var er = document.getElementById('save-err'); if(er) er.style.display='none';
-  ['f-name','f-phone','f-idnum','f-amount','f-notes'].forEach(function(id){ setVal(id,''); });
+  ['f-name','f-phone','f-amount','f-notes'].forEach(function(id){ setVal(id,''); });
   setVal('f-due', new Date().toISOString().split('T')[0]);
   setVal('f-status','due');
 }
@@ -1505,82 +1505,6 @@ async function loadPayments(){
 }
 
 // ── REPORTS PAGE ──────────────────────
-async function loadReports(){
-  var el = document.getElementById('rpt-content');
-  if(!el) return;
-  var debtors = await fetchDebtors();
-  var totalPay=0;
-  try{ var ps=await PAYMENTS.get(); ps.forEach(function(d){ totalPay+=(parseFloat(d.data().amount)||0); }); }catch(e){}
-  var totalOwed = debtors.reduce(function(s,d){ return s+(parseFloat(d.amount_owed)||0); },0);
-  var byStatus  = {due:0,paid:0};
-  debtors.forEach(function(d){ if(d.status==='due'||d.status==='paid') byStatus[d.status]++; });
-  var total = debtors.length||1;
-  el.innerHTML =
-    '<div class="stats" style="margin-bottom:20px">'+
-      '<div class="scard gold"><div class="sc-icon">💰</div><div class="sc-val">R '+fmt(totalOwed)+'</div><div class="sc-lbl">Total Outstanding</div></div>'+
-      '<div class="scard green"><div class="sc-icon">✅</div><div class="sc-val">R '+fmt(totalPay)+'</div><div class="sc-lbl">Total Collected (All Time)</div></div>'+
-      '<div class="scard gold"><div class="sc-icon">🟡</div><div class="sc-val">'+byStatus.due+'</div><div class="sc-lbl">Due Accounts</div></div>'+
-      
-    '</div>'+
-    '<div class="rcard">'+
-      '<h2 style="font-size:20px;color:var(--ink);margin-bottom:18px">Account Status Breakdown</h2>'+
-      rBar('🟡 Due',byStatus.due,total,'var(--gold)')+
-      rBar('🟢 Paid',byStatus.paid,total,'var(--green)')+
-    '</div>';
-}
-
-function rBar(label,count,total,color){
-  var pct=Math.round(count/total*100);
-  return '<div class="rrow">'+
-    '<div class="rrow-header"><span>'+esc(label)+'</span><span>'+count+' accounts ('+pct+'%)</span></div>'+
-    '<div class="rtrack"><div class="rfill" style="width:'+pct+'%;background:'+color+'"></div></div>'+
-  '</div>';
-}
-
-// ── FOLLOW-UPS PAGE ───────────────────
-async function loadFollowups(){
-  var el = document.getElementById('fu-list');
-  if(!el) return;
-  var today = new Date().toISOString().split('T')[0];
-  try{
-    var snap = await CALLS.where('followup_date','!=','').orderBy('followup_date','asc').get();
-    var items = snap.docs.map(function(d){ return merge({id:d.id},d.data()); }).filter(function(i){ return !!i.followup_date; });
-    if(!items.length){
-      el.innerHTML='<div class="empty-state"><div class="ei">📅</div><p class="et">No follow-ups scheduled.</p></div>';
-      return;
-    }
-    var html='';
-    var overdue  = items.filter(function(i){ return i.followup_date<today; });
-    var todayArr = items.filter(function(i){ return i.followup_date===today; });
-    var upcoming = items.filter(function(i){ return i.followup_date>today; });
-
-    function fuSection(arr, type, sectionTitle){
-      if(!arr.length) return '';
-      var titleColor = type==='overdue'?'color:var(--red)':type==='today'?'color:var(--teal)':'';
-      return '<div class="slabel" style="'+titleColor+'">'+sectionTitle+'</div>'+
-        arr.map(function(item){
-          var debtor = allDebtors.find(function(d){ return d.id===item.debtor_id; });
-          var dname  = debtor ? debtor.name : 'Unknown Debtor';
-          return '<div class="fu-card '+type+'" onclick="openDebtor(\''+item.debtor_id+'\')">'+
-            '<div class="fu-info">'+
-              '<div class="fu-name">'+esc(dname)+'</div>'+
-              '<div class="fu-outcome">'+esc(item.outcome||'')+'</div>'+
-              (item.notes?'<div style="font-size:13px;color:var(--muted)">'+esc(item.notes)+'</div>':'')+
-            '</div>'+
-            '<div class="fu-date '+type+'">📅 '+esc(item.followup_date)+'</div>'+
-          '</div>';
-        }).join('');
-    }
-    html += fuSection(overdue, 'overdue','🔴 Overdue Follow-Ups');
-    html += fuSection(todayArr,'today',  '📅 Due Today');
-    html += fuSection(upcoming,'upcoming','🔜 Upcoming');
-    el.innerHTML = html;
-  }catch(e){
-    el.innerHTML='<div class="empty-state"><p class="et">❌ '+esc(e.message)+'</p></div>';
-  }
-}
-
-// ── ACTIVITY LOG PAGE ─────────────────
 async function loadActivity(){
   var el = document.getElementById('act-list');
   if(!el) return;
