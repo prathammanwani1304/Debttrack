@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="DebtTrack">
@@ -13,519 +14,384 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
 firebase.initializeApp({
-  apiKey:"AIzaSyDS8YvvQMg9vJd07--0dBg8vevJv9JRnNQ",
-  authDomain:"debttrack-mt.firebaseapp.com",
-  projectId:"debttrack-mt",
-  storageBucket:"debttrack-mt.firebasestorage.app",
-  messagingSenderId:"72116314942",
-  appId:"1:72116314942:web:2ae7ef594664940607026f"
+  apiKey:            "AIzaSyDS8YvvQMg9vJd07--0dBg8vevJv9JRnNQ",
+  authDomain:        "debttrack-mt.firebaseapp.com",
+  projectId:         "debttrack-mt",
+  storageBucket:     "debttrack-mt.firebasestorage.app",
+  messagingSenderId: "72116314942",
+  appId:             "1:72116314942:web:2ae7ef594664940607026f"
 });
-const DB = firebase.firestore();
-const DEBTORS   = DB.collection('debtors');
-const PAYMENTS  = DB.collection('payments');
-const BILLS     = DB.collection('bills');
-const CALLS     = DB.collection('call_logs');
+var DB       = firebase.firestore();
+var DEBTORS  = DB.collection("debtors");
+var PAYMENTS = DB.collection("payments");
+var BILLS    = DB.collection("bills");
+var CALLS    = DB.collection("call_logs");
 </script>
 <style>
-/* ══════════════════════════════════════
-   DESIGN TOKENS
-══════════════════════════════════════ */
-:root{
-  --ink:     #0f1c3f;
-  --ink2:    #1a2f5e;
-  --gold:    #c27c0e;
-  --gold-bg: #fef8ec;
-  --gold-br: #f5d98b;
-  --teal:    #0c7a6a;
-  --teal-bg: #e8f7f5;
-  --red:     #b91c1c;
-  --red-bg:  #fff1f1;
-  --red-br:  #fca5a5;
-  --green:   #166534;
-  --grn-bg:  #f0fdf4;
-  --grn-br:  #86efac;
-  --bg:      #f4f1eb;
-  --surface: #ffffff;
-  --border:  #e2ddd4;
-  --text:    #0f1c3f;
-  --muted:   #6b7280;
-  --sh1:     0 1px 4px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.06);
-  --sh2:     0 8px 32px rgba(0,0,0,.13);
-  --r:       16px;
+/* === TOKENS === */
+:root {
+  --ink:    #0f1c3f;
+  --ink2:   #1a2f5e;
+  --gold:   #c27c0e;
+  --goldbg: #fef8ec;
+  --goldbr: #f5d98b;
+  --teal:   #0c7a6a;
+  --tealbg: #e8f7f5;
+  --red:    #b91c1c;
+  --redbg:  #fff1f1;
+  --redbr:  #fca5a5;
+  --grn:    #166534;
+  --grnbg:  #f0fdf4;
+  --grnbr:  #86efac;
+  --bg:     #f4f1eb;
+  --srf:    #ffffff;
+  --bdr:    #e2ddd4;
+  --txt:    #0f1c3f;
+  --mut:    #6b7280;
+  --sh1:    0 1px 4px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.06);
+  --sh2:    0 8px 32px rgba(0,0,0,.13);
+  --r:      16px;
 }
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+html { font-size:17px; -webkit-text-size-adjust:100%; }
+body { font-family:"Nunito",sans-serif; background:var(--bg); color:var(--txt); min-height:100vh; overflow-x:hidden; }
+h1,h2,h3,h4 { font-family:"Lora",serif; }
+button { cursor:pointer; font-family:"Nunito",sans-serif; border:none; background:none; }
+input,select,textarea { font-family:"Nunito",sans-serif; }
 
-/* ══════════════════════════════════════
-   RESET
-══════════════════════════════════════ */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html{font-size:17px;-webkit-text-size-adjust:100%}
-body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
-h1,h2,h3,h4{font-family:'Lora',serif}
-button{cursor:pointer;font-family:'Nunito',sans-serif;border:none;background:none}
-input,select,textarea{font-family:'Nunito',sans-serif}
-a{text-decoration:none}
+/* === TOPBAR === */
+.topbar {
+  background:var(--ink2); height:68px; padding:0 24px;
+  display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:90; box-shadow:0 2px 12px rgba(0,0,0,.25);
+}
+.brand { display:flex; align-items:center; gap:12px; }
+.brand-logo { width:42px; height:42px; background:var(--gold); border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+.brand-title { font-family:"Lora",serif; font-size:20px; color:#fff; font-weight:700; }
+.brand-sub { font-size:11px; color:rgba(255,255,255,.5); letter-spacing:.8px; text-transform:uppercase; margin-top:1px; }
+.topbar-right { color:rgba(255,255,255,.55); font-size:13px; font-weight:600; text-align:right; }
 
-/* ══════════════════════════════════════
-   TARGET MINI WIDGET
-══════════════════════════════════════ */
-.target-mini{
-  position:fixed;top:78px;right:14px;z-index:85;
-  background:var(--surface);border:2px solid var(--border);
-  border-radius:14px;padding:10px 14px;box-shadow:var(--sh2);
-  min-width:180px;max-width:220px;cursor:pointer;
-  transition:transform .15s;
+/* === DESKTOP NAV === */
+.dnav {
+  background:var(--srf); border-bottom:2px solid var(--bdr);
+  display:flex; padding:0 16px; gap:2px; overflow-x:auto; scrollbar-width:none;
 }
-.target-mini:hover{transform:scale(1.02)}
-.tm-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.tm-title{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
-.tm-pct{font-size:13px;font-weight:800;color:var(--teal)}
-.tm-track{height:8px;background:var(--border);border-radius:99px;overflow:hidden;margin-bottom:5px}
-.tm-fill{height:100%;border-radius:99px;transition:width .5s ease;background:var(--teal)}
-.tm-vals{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-weight:600}
-@media(max-width:600px){
-  .target-mini{top:auto;bottom:calc(70px + env(safe-area-inset-bottom) + 8px);right:10px;min-width:160px;font-size:11px}
-}
-
-/* ══════════════════════════════════════
-   TOPBAR
-══════════════════════════════════════ */
-.topbar{
-  background:var(--ink2);
-  height:68px;padding:0 28px;
-  display:flex;align-items:center;justify-content:space-between;
-  position:sticky;top:0;z-index:90;
-  box-shadow:0 2px 12px rgba(0,0,0,.25);
-}
-.brand{display:flex;align-items:center;gap:12px}
-.brand-logo{
-  width:42px;height:42px;background:var(--gold);border-radius:11px;
-  display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
-}
-.brand-title{font-family:'Lora',serif;font-size:20px;color:#fff;font-weight:700}
-.brand-sub{font-size:11px;color:rgba(255,255,255,.5);letter-spacing:.8px;text-transform:uppercase;margin-top:1px}
-.topbar-right{color:rgba(255,255,255,.55);font-size:14px;font-weight:600;text-align:right}
-
-/* ══════════════════════════════════════
-   DESKTOP NAV
-══════════════════════════════════════ */
-.desk-nav{
-  background:var(--surface);border-bottom:2px solid var(--border);
-  display:flex;padding:0 20px;gap:2px;overflow-x:auto;scrollbar-width:none;
-}
-.desk-nav::-webkit-scrollbar{display:none}
-.dnav-btn{
-  height:54px;padding:0 18px;display:flex;align-items:center;gap:8px;
-  font-size:15px;font-weight:700;color:var(--muted);
-  border-bottom:3px solid transparent;white-space:nowrap;flex-shrink:0;
+.dnav::-webkit-scrollbar { display:none; }
+.dnav-btn {
+  height:54px; padding:0 16px; display:flex; align-items:center; gap:7px;
+  font-size:14px; font-weight:700; color:var(--mut);
+  border-bottom:3px solid transparent; white-space:nowrap; flex-shrink:0;
   transition:color .15s,border-color .15s;
 }
-.dnav-btn:hover{color:var(--ink)}
-.dnav-btn.active{color:var(--ink);border-bottom-color:var(--gold)}
-.dnav-btn .di{font-size:18px}
-.nbadge{
-  background:var(--red);color:#fff;font-size:11px;font-weight:800;
-  padding:2px 7px;border-radius:99px;min-width:20px;text-align:center;
+.dnav-btn:hover { color:var(--ink); }
+.dnav-btn.active { color:var(--ink); border-bottom-color:var(--gold); }
+
+/* === MAIN === */
+.main { max-width:1080px; margin:0 auto; padding:24px 20px 100px; }
+.page { display:none; }
+.page.active { display:block; }
+
+/* === PAGE HEADER === */
+.ph { margin-bottom:22px; display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+.ph-title { font-size:28px; color:var(--ink); line-height:1.1; }
+.ph-sub { font-size:14px; color:var(--mut); margin-top:4px; }
+
+/* === STAT CARDS === */
+.stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:24px; }
+.scard { background:var(--srf); border:2px solid var(--bdr); border-radius:var(--r); padding:18px; box-shadow:var(--sh1); }
+.scard.red   { border-color:var(--redbr); background:var(--redbg); }
+.scard.gold  { border-color:var(--goldbr); background:var(--goldbg); }
+.scard.green { border-color:var(--grnbr); background:var(--grnbg); }
+.scard.teal  { border-color:#99d6cf; background:var(--tealbg); }
+.sc-icon { font-size:26px; margin-bottom:7px; }
+.sc-val { font-family:"Lora",serif; font-size:30px; font-weight:700; color:var(--ink); line-height:1; margin-bottom:4px; }
+.scard.red   .sc-val { color:var(--red); }
+.scard.gold  .sc-val { color:var(--gold); }
+.scard.green .sc-val { color:var(--grn); }
+.sc-lbl { font-size:12px; color:var(--mut); font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
+
+/* === BUTTONS === */
+.btn {
+  display:inline-flex; align-items:center; gap:7px;
+  height:48px; padding:0 20px; border-radius:12px;
+  font-size:15px; font-weight:700; border:none;
+  transition:transform .12s,opacity .12s; white-space:nowrap;
+}
+.btn:active { transform:scale(.97); }
+.btn-ink   { background:var(--ink2); color:#fff; }
+.btn-ink:hover { background:var(--ink); }
+.btn-gold  { background:var(--gold); color:#fff; }
+.btn-gold:hover { opacity:.88; }
+.btn-teal  { background:var(--teal); color:#fff; }
+.btn-teal:hover { opacity:.88; }
+.btn-red   { background:var(--red); color:#fff; }
+.btn-red:hover { opacity:.88; }
+.btn-ghost { background:transparent; color:var(--ink); border:2px solid var(--bdr); }
+.btn-ghost:hover { border-color:var(--ink); }
+.btn-lg { height:56px; font-size:17px; padding:0 26px; }
+.btn-sm { height:36px; font-size:13px; padding:0 13px; border-radius:9px; }
+.btn-full { width:100%; justify-content:center; }
+
+/* === SEARCH === */
+.search-row { display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+.search-input {
+  flex:1; min-width:200px; height:48px; padding:0 16px; font-size:16px;
+  border:2px solid var(--bdr); border-radius:12px; background:var(--srf); color:var(--txt); outline:none;
+}
+.search-input:focus { border-color:var(--ink); }
+
+/* === DEBTOR LIST === */
+.dlist { display:flex; flex-direction:column; gap:9px; }
+.dcard {
+  background:var(--srf); border:2px solid var(--bdr); border-radius:var(--r);
+  padding:16px 18px; display:flex; align-items:center; gap:13px;
+  cursor:pointer; transition:border-color .15s,transform .12s,box-shadow .15s; box-shadow:var(--sh1);
+}
+.dcard:hover { border-color:var(--ink2); transform:translateY(-1px); box-shadow:var(--sh2); }
+.dcard:active { transform:scale(.99); }
+.davatar {
+  width:50px; height:50px; border-radius:50%;
+  font-family:"Lora",serif; font-size:17px; font-weight:700; color:#fff;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.davatar.due   { background:var(--gold); }
+.davatar.paid  { background:var(--grn); }
+.davatar.def   { background:var(--ink2); }
+.dinfo { flex:1; min-width:0; }
+.dname { font-size:17px; font-weight:800; color:var(--ink); }
+.dphone { font-size:13px; color:var(--mut); margin-top:2px; }
+.dpill {
+  display:inline-block; padding:2px 9px; border-radius:99px;
+  font-size:12px; font-weight:800; margin-top:4px;
+}
+.dpill.due  { background:var(--goldbg); color:var(--gold); }
+.dpill.paid { background:var(--grnbg); color:var(--grn); }
+.damt { text-align:right; flex-shrink:0; }
+.damt-val { font-family:"Lora",serif; font-size:20px; font-weight:700; }
+.damt-val.due  { color:var(--gold); }
+.damt-val.paid { color:var(--grn); }
+.damt-days { font-size:12px; color:var(--mut); margin-top:3px; }
+.dchev { color:var(--bdr); font-size:22px; flex-shrink:0; margin-left:4px; }
+
+/* === FORM === */
+.fcard { background:var(--srf); border:2px solid var(--bdr); border-radius:var(--r); padding:26px; box-shadow:var(--sh1); max-width:640px; }
+.fgrp { margin-bottom:18px; }
+.flbl { display:block; font-size:15px; font-weight:800; color:var(--ink); margin-bottom:7px; }
+.flbl .req { color:var(--red); }
+.finput,.fsel,.ftxt {
+  width:100%; height:52px; padding:0 15px; font-size:16px;
+  border:2px solid var(--bdr); border-radius:12px;
+  background:var(--srf); color:var(--txt); outline:none; -webkit-appearance:none;
+  transition:border-color .15s;
+}
+.finput:focus,.fsel:focus,.ftxt:focus { border-color:var(--ink); }
+.ftxt { height:auto; min-height:90px; padding:13px 15px; resize:none; }
+.frow { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+.factions { display:flex; gap:9px; margin-top:22px; flex-wrap:wrap; }
+.ferr {
+  display:none; background:var(--redbg); border:2px solid var(--redbr);
+  border-radius:12px; padding:12px 16px; margin-bottom:14px;
+  font-size:14px; font-weight:700; color:var(--red); line-height:1.5;
 }
 
-/* ══════════════════════════════════════
-   MAIN CONTENT
-══════════════════════════════════════ */
-.main{max-width:1080px;margin:0 auto;padding:28px 20px 100px}
-.page{display:none}
-.page.active{display:block}
+/* === SECTION LABEL === */
+.slbl { font-family:"Lora",serif; font-size:19px; color:var(--ink); margin:6px 0 13px; display:flex; align-items:center; gap:8px; }
 
-/* ══════════════════════════════════════
-   PAGE HEADER
-══════════════════════════════════════ */
-.ph{margin-bottom:24px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px}
-.ph-title{font-size:30px;color:var(--ink);line-height:1.1}
-.ph-sub{font-size:15px;color:var(--muted);margin-top:4px}
-
-/* ══════════════════════════════════════
-   STAT CARDS
-══════════════════════════════════════ */
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:28px}
-.scard{background:var(--surface);border:2px solid var(--border);border-radius:var(--r);padding:20px;box-shadow:var(--sh1)}
-.scard.red  {border-color:var(--red-br);background:var(--red-bg)}
-.scard.gold {border-color:var(--gold-br);background:var(--gold-bg)}
-.scard.green{border-color:var(--grn-br);background:var(--grn-bg)}
-.scard.teal {border-color:#99d6cf;background:var(--teal-bg)}
-.sc-icon{font-size:28px;margin-bottom:8px}
-.sc-val{font-family:'Lora',serif;font-size:32px;font-weight:700;color:var(--ink);line-height:1;margin-bottom:4px}
-.scard.red  .sc-val{color:var(--red)}
-.scard.gold .sc-val{color:var(--gold)}
-.scard.green.sc-val{color:var(--green)}
-.sc-lbl{font-size:13px;color:var(--muted);font-weight:700}
-
-/* ══════════════════════════════════════
-   BUTTONS
-══════════════════════════════════════ */
-.btn{
-  display:inline-flex;align-items:center;gap:7px;
-  height:50px;padding:0 22px;border-radius:12px;
-  font-size:16px;font-weight:700;border:none;
-  transition:transform .12s,opacity .12s;white-space:nowrap;
+/* === OVERLAY === */
+.overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:200; align-items:flex-end; justify-content:center; }
+.overlay.open { display:flex; }
+.modal {
+  background:var(--srf); border-radius:24px 24px 0 0;
+  padding:26px 24px 48px; width:100%; max-width:720px;
+  max-height:94vh; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  animation:slideUp .22s ease;
 }
-.btn:active{transform:scale(.97)}
-.btn-ink  {background:var(--ink2);color:#fff}
-.btn-ink:hover{background:var(--ink)}
-.btn-gold {background:var(--gold);color:#fff}
-.btn-gold:hover{opacity:.88}
-.btn-teal {background:var(--teal);color:#fff}
-.btn-teal:hover{opacity:.88}
-.btn-red  {background:var(--red);color:#fff}
-.btn-red:hover{opacity:.88}
-.btn-ghost{background:transparent;color:var(--ink);border:2px solid var(--border)}
-.btn-ghost:hover{border-color:var(--ink)}
-.btn-lg{height:58px;font-size:18px;padding:0 28px}
-.btn-full{width:100%;justify-content:center}
-.btn-sm{height:38px;font-size:14px;padding:0 14px;border-radius:9px}
-
-/* ══════════════════════════════════════
-   SEARCH ROW
-══════════════════════════════════════ */
-.search-row{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
-.search-input{
-  flex:1;min-width:220px;height:50px;padding:0 18px;font-size:16px;
-  border:2px solid var(--border);border-radius:12px;background:var(--surface);
-  color:var(--text);outline:none;
+@media(min-width:680px) {
+  .overlay { align-items:center; padding:20px; }
+  .modal { border-radius:20px; max-height:90vh; }
 }
-.search-input:focus{border-color:var(--ink)}
+@keyframes slideUp { from { transform:translateY(24px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+.mhandle { width:38px; height:5px; background:var(--bdr); border-radius:99px; margin:0 auto 20px; }
+.mtitle { font-family:"Lora",serif; font-size:24px; color:var(--ink); margin-bottom:3px; }
+.msub { font-size:14px; color:var(--mut); margin-bottom:18px; }
+.mactions { display:flex; flex-direction:column; gap:8px; margin-top:18px; }
+.mactions .btn { justify-content:center; }
 
-/* ══════════════════════════════════════
-   DEBTOR LIST
-══════════════════════════════════════ */
-.dlist{display:flex;flex-direction:column;gap:10px}
-.dcard{
-  background:var(--surface);border:2px solid var(--border);border-radius:var(--r);
-  padding:18px 20px;display:flex;align-items:center;gap:14px;
-  cursor:pointer;transition:border-color .15s,transform .12s,box-shadow .15s;
-  box-shadow:var(--sh1);
+/* === DEBTOR DETAIL === */
+.d-hdr { display:flex; align-items:center; gap:13px; margin-bottom:16px; }
+.d-hdr .davatar { width:58px; height:58px; font-size:20px; }
+.d-hdr-info { flex:1; }
+.d-hdr-amt { text-align:right; }
+.d-hdr-amt .big { font-family:"Lora",serif; font-size:28px; font-weight:700; }
+.d-hdr-amt .big.due  { color:var(--gold); }
+.d-hdr-amt .big.paid { color:var(--grn); }
+
+.infogrid { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-bottom:14px; }
+.iblock { background:var(--bg); border-radius:11px; padding:11px 14px; }
+.ikey { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:var(--mut); margin-bottom:3px; }
+.ival { font-size:17px; font-weight:700; color:var(--ink); }
+
+/* === LEDGER === */
+.ledger-wrap { background:var(--bg); border-radius:13px; padding:15px 16px; margin-bottom:13px; }
+.ledger-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:11px; flex-wrap:wrap; gap:7px; }
+.ledger-ttl { font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:var(--mut); }
+.lsum { display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px; margin-bottom:12px; }
+.lsb { border-radius:9px; padding:9px 11px; text-align:center; }
+.lsb.billed  { background:var(--redbg); }
+.lsb.paid    { background:var(--grnbg); }
+.lsb.balance { background:var(--goldbg); }
+.lsb-key { font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.7px; margin-bottom:3px; }
+.lsb.billed  .lsb-key { color:var(--red); }
+.lsb.paid    .lsb-key { color:var(--grn); }
+.lsb.balance .lsb-key { color:var(--gold); }
+.lsb-val { font-family:"Lora",serif; font-size:17px; font-weight:700; }
+.lsb.billed  .lsb-val { color:var(--red); }
+.lsb.paid    .lsb-val { color:var(--grn); }
+.lsb.balance .lsb-val { color:var(--gold); }
+.ltbl-wrap { max-height:240px; overflow-y:auto; border-radius:9px; border:1px solid var(--bdr); }
+.ltbl { width:100%; border-collapse:collapse; font-size:12px; background:var(--srf); }
+.ltbl th { padding:7px 9px; font-size:10px; text-transform:uppercase; letter-spacing:.7px; color:var(--mut); font-weight:800; border-bottom:2px solid var(--bdr); background:var(--srf); position:sticky; top:0; text-align:left; }
+.ltbl td { padding:8px 9px; border-bottom:1px solid var(--bdr); vertical-align:middle; }
+.ltbl tr:last-child td { border-bottom:none; }
+.ltbl tr.brow td { background:#fff8f8; }
+.ltbl tr.prow td { background:#f8fff9; }
+.ltype { display:inline-block; padding:2px 8px; border-radius:99px; font-size:10px; font-weight:800; text-transform:uppercase; }
+.ltype.bill { background:var(--redbg); color:var(--red); }
+.ltype.pay  { background:var(--grnbg); color:var(--grn); }
+.lref { font-weight:800; color:var(--ink); }
+.lbal { font-weight:800; text-align:right; white-space:nowrap; }
+.lbal.owe   { color:var(--red); }
+.lbal.clear { color:var(--grn); }
+.ldel { color:var(--bdr); font-size:15px; padding:2px 4px; border-radius:5px; transition:color .12s; cursor:pointer; border:none; background:none; }
+.ldel:hover { color:var(--red); }
+
+/* === CALL LOG === */
+.callwrap { background:var(--bg); border-radius:13px; padding:15px 16px; margin-bottom:13px; }
+.call-ttl { font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:var(--mut); margin-bottom:9px; }
+.centry { border-left:3px solid var(--teal); padding:6px 0 6px 12px; margin-bottom:7px; }
+.centry:last-child { margin-bottom:0; }
+.cdate { font-size:11px; color:var(--mut); }
+.coutcome { font-size:14px; font-weight:800; color:var(--ink); margin-top:2px; }
+.cnote { font-size:12px; color:var(--mut); margin-top:2px; }
+
+/* === PAYMENT CARDS === */
+.pcard {
+  background:var(--srf); border:2px solid var(--bdr); border-radius:13px;
+  padding:14px 18px; display:flex; align-items:center; justify-content:space-between;
+  gap:11px; box-shadow:var(--sh1); margin-bottom:8px;
 }
-.dcard:hover{border-color:var(--ink2);transform:translateY(-1px);box-shadow:var(--sh2)}
-.dcard:active{transform:scale(.99)}
-.davatar{
-  width:52px;height:52px;border-radius:50%;
-  font-family:'Lora',serif;font-size:18px;font-weight:700;color:#fff;
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+.pname { font-size:16px; font-weight:800; color:var(--ink); }
+.pmeta { font-size:12px; color:var(--mut); margin-top:2px; }
+.pamt  { font-family:"Lora",serif; font-size:19px; font-weight:700; color:var(--grn); white-space:nowrap; }
+
+/* === REPORT === */
+.rcard { background:var(--srf); border:2px solid var(--bdr); border-radius:var(--r); padding:22px; box-shadow:var(--sh1); margin-bottom:16px; }
+.rrow { margin-bottom:14px; }
+.rrow-hdr { display:flex; justify-content:space-between; font-size:15px; font-weight:700; margin-bottom:6px; }
+.rtrack { height:12px; background:var(--bdr); border-radius:99px; overflow:hidden; }
+.rfill  { height:100%; border-radius:99px; transition:width .5s ease; }
+
+/* === LOADING / EMPTY === */
+.loading,.empty-state { text-align:center; padding:44px 20px; color:var(--mut); }
+.spinner { width:44px; height:44px; border:4px solid var(--bdr); border-top-color:var(--ink2); border-radius:50%; animation:spin .75s linear infinite; margin:0 auto 12px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.ei { font-size:52px; margin-bottom:10px; }
+.et { font-size:17px; font-weight:700; }
+
+/* === TOAST === */
+.toast {
+  position:fixed; bottom:26px; left:50%; transform:translateX(-50%);
+  background:var(--ink2); color:#fff; padding:13px 24px;
+  border-radius:99px; font-size:15px; font-weight:700;
+  box-shadow:var(--sh2); z-index:999; display:none;
+  align-items:center; gap:7px; white-space:nowrap;
 }
-.davatar.due{background:var(--gold)}
+.toast.show { display:flex; animation:tfade .22s ease; }
+.toast.ok  { background:var(--teal); }
+.toast.err { background:var(--red); }
+@keyframes tfade { from { opacity:0; transform:translateX(-50%) translateY(8px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
 
-
-.davatar.paid{background:var(--green)}
-.davatar.default,.davatar.due{background:var(--gold)}
-.davatar.paid{background:var(--green)}
-.dinfo{flex:1;min-width:0}
-.dname{font-size:18px;font-weight:800;color:var(--ink)}
-.dphone{font-size:14px;color:var(--muted);margin-top:2px}
-.dpill{
-  display:inline-block;padding:3px 10px;border-radius:99px;
-  font-size:12px;font-weight:800;margin-top:5px;
+/* === TARGET MINI WIDGET === */
+.target-mini {
+  position:fixed; top:76px; right:14px; z-index:85;
+  background:var(--srf); border:2px solid var(--bdr);
+  border-radius:13px; padding:10px 13px; box-shadow:var(--sh2);
+  min-width:175px; max-width:210px; cursor:pointer;
+  transition:transform .15s;
 }
-.dpill.due{background:var(--gold-bg);color:var(--gold)}
-
-
-.dpill.paid{background:var(--grn-bg);color:var(--green)}
-.damt{text-align:right;flex-shrink:0}
-.damt-val{font-family:'Lora',serif;font-size:22px;font-weight:700}
-.damt-val.due{color:var(--gold)}
-
-
-.damt-val.paid{color:var(--green)}
-.damt-days{font-size:12px;color:var(--muted);margin-top:3px}
-.dchev{color:var(--border);font-size:24px;flex-shrink:0;margin-left:4px}
-
-/* ══════════════════════════════════════
-   FORM
-══════════════════════════════════════ */
-.fcard{background:var(--surface);border:2px solid var(--border);border-radius:var(--r);padding:28px;box-shadow:var(--sh1);max-width:660px}
-.fgroup{margin-bottom:20px}
-.flabel{display:block;font-size:16px;font-weight:800;color:var(--ink);margin-bottom:8px}
-.flabel .req{color:var(--red)}
-.finput,.fselect,.ftextarea{
-  width:100%;height:54px;padding:0 16px;font-size:17px;
-  border:2px solid var(--border);border-radius:12px;
-  background:var(--surface);color:var(--text);outline:none;
-  -webkit-appearance:none;transition:border-color .15s;
-}
-.finput:focus,.fselect:focus,.ftextarea:focus{border-color:var(--ink)}
-.ftextarea{height:auto;min-height:100px;padding:14px 16px;resize:none}
-.frow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.factions{display:flex;gap:10px;margin-top:24px;flex-wrap:wrap}
-.ferr{
-  display:none;background:var(--red-bg);border:2px solid var(--red-br);
-  border-radius:12px;padding:14px 18px;margin-bottom:16px;
-  font-size:15px;font-weight:700;color:var(--red);line-height:1.5;
-}
-
-/* ══════════════════════════════════════
-   SECTION LABEL
-══════════════════════════════════════ */
-.slabel{
-  font-family:'Lora',serif;font-size:20px;color:var(--ink);
-  margin:8px 0 14px;display:flex;align-items:center;gap:8px;
+.target-mini:hover { transform:scale(1.02); }
+.tm-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
+.tm-ttl { font-size:11px; font-weight:800; color:var(--mut); text-transform:uppercase; letter-spacing:.7px; }
+.tm-pct { font-size:12px; font-weight:800; color:var(--teal); }
+.tm-track { height:7px; background:var(--bdr); border-radius:99px; overflow:hidden; margin-bottom:5px; }
+.tm-fill  { height:100%; border-radius:99px; background:var(--teal); transition:width .5s ease; }
+.tm-vals  { display:flex; justify-content:space-between; font-size:10px; color:var(--mut); font-weight:600; }
+@media(max-width:600px) {
+  .target-mini { top:auto; bottom:calc(68px + env(safe-area-inset-bottom) + 8px); right:10px; min-width:155px; }
 }
 
-/* ══════════════════════════════════════
-   OVERLAY / MODAL
-══════════════════════════════════════ */
-.overlay{
-  display:none;position:fixed;inset:0;
-  background:rgba(0,0,0,.55);z-index:200;
-  align-items:flex-end;justify-content:center;
-}
-.overlay.open{display:flex}
-.modal{
-  background:var(--surface);border-radius:24px 24px 0 0;
-  padding:28px 26px 44px;width:100%;max-width:740px;
-  max-height:94vh;overflow-y:auto;-webkit-overflow-scrolling:touch;
-  animation:slideUp .25s ease;
-}
-@media(min-width:680px){
-  .overlay{align-items:center;padding:20px}
-  .modal{border-radius:20px;max-height:90vh}
-}
-@keyframes slideUp{from{transform:translateY(28px);opacity:0}to{transform:translateY(0);opacity:1}}
-.mhandle{width:40px;height:5px;background:var(--border);border-radius:99px;margin:0 auto 22px}
-.mtitle{font-family:'Lora',serif;font-size:26px;color:var(--ink);margin-bottom:4px}
-.msub{font-size:15px;color:var(--muted);margin-bottom:20px}
-.mactions{display:flex;flex-direction:column;gap:9px;margin-top:20px}
-.mactions .btn{justify-content:center}
-
-/* ══════════════════════════════════════
-   DEBTOR DETAIL MODAL
-══════════════════════════════════════ */
-.d-header{display:flex;align-items:center;gap:14px;margin-bottom:18px}
-.d-header .davatar{width:60px;height:60px;font-size:22px}
-.d-header-info{flex:1}
-.d-header-amt{text-align:right}
-.d-header-amt .big{font-family:'Lora',serif;font-size:30px;font-weight:700}
-.d-header-amt .big.due{color:var(--gold)}
-.d-header-amt .big.pending{color:var(--gold)}
-.d-header-amt .big.plan{color:var(--teal)}
-.d-header-amt .big.paid{color:var(--green)}
-
-.infogrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
-.iblock{background:var(--bg);border-radius:12px;padding:12px 16px}
-.ikey{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px}
-.ival{font-size:18px;font-weight:700;color:var(--ink)}
-
-/* ══════════════════════════════════════
-   LEDGER
-══════════════════════════════════════ */
-.ledger-wrap{background:var(--bg);border-radius:14px;padding:16px 18px;margin-bottom:14px}
-.ledger-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
-.ledger-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
-.ledger-summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
-.lsum-block{border-radius:10px;padding:10px 12px;text-align:center}
-.lsum-block.billed {background:var(--red-bg)}
-.lsum-block.paid   {background:var(--grn-bg)}
-.lsum-block.balance{background:var(--gold-bg)}
-.lsum-key{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px}
-.lsum-block.billed  .lsum-key{color:var(--red)}
-.lsum-block.paid    .lsum-key{color:var(--green)}
-.lsum-block.balance .lsum-key{color:var(--gold)}
-.lsum-val{font-family:'Lora',serif;font-size:18px;font-weight:700}
-.lsum-block.billed  .lsum-val{color:var(--red)}
-.lsum-block.paid    .lsum-val{color:var(--green)}
-.lsum-block.balance .lsum-val{color:var(--gold)}
-.ltable-wrap{max-height:260px;overflow-y:auto;border-radius:10px;border:1px solid var(--border)}
-.ltable{width:100%;border-collapse:collapse;font-size:13px;background:var(--surface)}
-.ltable th{
-  padding:8px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.8px;
-  color:var(--muted);font-weight:800;border-bottom:2px solid var(--border);
-  background:var(--surface);position:sticky;top:0;text-align:left;
-}
-.ltable td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
-.ltable tr:last-child td{border-bottom:none}
-.ltable tr.bill-row td{background:#fff8f8}
-.ltable tr.pay-row  td{background:#f8fff9}
-.ltype{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:800;text-transform:uppercase}
-.ltype.bill{background:var(--red-bg);color:var(--red)}
-.ltype.pay {background:var(--grn-bg);color:var(--green)}
-.lref{font-weight:800;color:var(--ink);font-size:13px}
-.lbal{font-weight:800;text-align:right;white-space:nowrap}
-.lbal.owe{color:var(--red)}
-.lbal.clear{color:var(--green)}
-.ldel{color:var(--border);font-size:16px;padding:3px 5px;border-radius:6px;transition:color .12s;cursor:pointer;border:none;background:none}
-.ldel:hover{color:var(--red)}
-
-/* ══════════════════════════════════════
-   CALL LOG
-══════════════════════════════════════ */
-.callwrap{background:var(--bg);border-radius:14px;padding:16px 18px;margin-bottom:14px}
-.call-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px}
-.centry{border-left:3px solid var(--teal);padding:7px 0 7px 13px;margin-bottom:8px}
-.centry:last-child{margin-bottom:0}
-.cdate{font-size:12px;color:var(--muted)}
-.coutcome{font-size:15px;font-weight:800;color:var(--ink);margin-top:2px}
-.cnote{font-size:13px;color:var(--muted);margin-top:2px}
-
-/* ══════════════════════════════════════
-   PAYMENT CARDS (payments page)
-══════════════════════════════════════ */
-.pcard{
-  background:var(--surface);border:2px solid var(--border);border-radius:14px;
-  padding:16px 20px;display:flex;align-items:center;
-  justify-content:space-between;gap:12px;box-shadow:var(--sh1);margin-bottom:9px;
-}
-.pname{font-size:17px;font-weight:800;color:var(--ink)}
-.pmeta{font-size:13px;color:var(--muted);margin-top:2px}
-.pamt{font-family:'Lora',serif;font-size:20px;font-weight:700;color:var(--green);white-space:nowrap}
-
-/* ══════════════════════════════════════
-   REPORT
-══════════════════════════════════════ */
-.rcard{background:var(--surface);border:2px solid var(--border);border-radius:var(--r);padding:24px;box-shadow:var(--sh1);margin-bottom:18px}
-.rrow{margin-bottom:16px}
-.rrow-header{display:flex;justify-content:space-between;font-size:16px;font-weight:700;margin-bottom:7px}
-.rtrack{height:13px;background:var(--border);border-radius:99px;overflow:hidden}
-.rfill{height:100%;border-radius:99px;transition:width .6s ease}
-
-/* ══════════════════════════════════════
-   FOLLOW-UP
-══════════════════════════════════════ */
-.fu-card{
-  background:var(--surface);border:2px solid var(--border);border-radius:14px;
-  padding:16px 18px;display:flex;align-items:center;gap:12px;
-  cursor:pointer;box-shadow:var(--sh1);margin-bottom:9px;
-  transition:border-color .15s,box-shadow .15s;
-}
-.fu-card:hover{box-shadow:var(--sh2)}
-
-.fu-card.today  {border-color:#99d6cf}
-.fu-info{flex:1}
-.fu-name{font-size:17px;font-weight:800;color:var(--ink)}
-.fu-outcome{font-size:14px;color:var(--muted);margin-top:2px}
-.fu-date{font-size:14px;font-weight:800;white-space:nowrap;text-align:right}
-
-.fu-date.today  {color:var(--teal)}
-.fu-date.upcoming{color:var(--muted)}
-
-/* ══════════════════════════════════════
-   LOADING / EMPTY
-══════════════════════════════════════ */
-.loading,.empty-state{text-align:center;padding:50px 20px;color:var(--muted)}
-.spinner{width:48px;height:48px;border:4px solid var(--border);border-top-color:var(--ink2);border-radius:50%;animation:spin .75s linear infinite;margin:0 auto 14px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.ei{font-size:56px;margin-bottom:12px}
-.et{font-size:18px;font-weight:700}
-
-/* ══════════════════════════════════════
-   TOAST
-══════════════════════════════════════ */
-.toast{
-  position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
-  background:var(--ink2);color:#fff;padding:14px 26px;
-  border-radius:99px;font-size:16px;font-weight:700;
-  box-shadow:var(--sh2);z-index:999;display:none;
-  align-items:center;gap:8px;white-space:nowrap;
-}
-.toast.show{display:flex;animation:tin .25s ease}
-.toast.ok {background:var(--teal)}
-.toast.err{background:var(--red)}
-@keyframes tin{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-
-/* ══════════════════════════════════════
-   RECEIPT (print only)
-══════════════════════════════════════ */
-#receipt-el{display:none;width:80mm;font-family:'Courier New',monospace;font-size:12px;padding:6px;color:#000;background:#fff}
-.rc{text-align:center}
-.rb{font-weight:bold}
-.rline{border:none;border-top:1px dashed #000;margin:5px 0}
-.rrow2{display:flex;justify-content:space-between;margin:2px 0}
-
-/* ══════════════════════════════════════
-   STATEMENT / DAILY REPORT (print only)
-══════════════════════════════════════ */
-#stmt-el,#rpt-el{display:none;font-family:'Courier New',monospace;padding:20px;color:#000;background:#fff}
-
-/* ══════════════════════════════════════
-   BOTTOM TABS (mobile/iPad)
-══════════════════════════════════════ */
-.btabs{
-  display:none;position:fixed;bottom:0;left:0;right:0;
-  background:var(--surface);border-top:2px solid var(--border);
-  height:calc(62px + env(safe-area-inset-bottom));
+/* === BOTTOM TABS === */
+.btabs {
+  display:none; position:fixed; bottom:0; left:0; right:0;
+  background:var(--srf); border-top:2px solid var(--bdr);
+  height:calc(60px + env(safe-area-inset-bottom));
   padding-bottom:env(safe-area-inset-bottom);
-  z-index:88;justify-content:space-around;align-items:stretch;
+  z-index:88; justify-content:space-around; align-items:stretch;
   box-shadow:0 -3px 16px rgba(0,0,0,.07);
 }
-.btab{
-  flex:1;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;gap:3px;color:var(--muted);
-  font-size:10px;font-weight:700;padding:6px 2px;
-  font-family:'Nunito',sans-serif;
+.btab {
+  flex:1; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:3px; color:var(--mut);
+  font-size:10px; font-weight:700; padding:5px 2px;
+  font-family:"Nunito",sans-serif;
 }
-.btab .bi{font-size:22px;line-height:1}
-.btab.active{color:var(--ink2)}
+.btab .bi { font-size:20px; line-height:1; }
+.btab.active { color:var(--ink2); }
 
-/* ══════════════════════════════════════
-   INSTALL BANNER
-══════════════════════════════════════ */
-.ibanner{
-  display:none;position:fixed;
-  bottom:calc(62px + env(safe-area-inset-bottom) + 10px);
-  left:12px;right:12px;background:var(--ink2);color:#fff;
-  border-radius:16px;padding:14px 18px;box-shadow:var(--sh2);
-  z-index:180;align-items:center;gap:12px;animation:tin .4s ease;
+/* === INSTALL BANNER === */
+.ibanner {
+  display:none; position:fixed;
+  bottom:calc(60px + env(safe-area-inset-bottom) + 10px);
+  left:12px; right:12px; background:var(--ink2); color:#fff;
+  border-radius:15px; padding:13px 16px; box-shadow:var(--sh2);
+  z-index:180; align-items:center; gap:11px;
 }
-.ibanner.show{display:flex}
-.itext{flex:1;font-size:14px;line-height:1.5}
-.itext strong{display:block;font-size:16px;margin-bottom:2px}
-.iclose{background:rgba(255,255,255,.18);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-family:'Nunito',sans-serif}
+.ibanner.show { display:flex; animation:tfade .4s ease; }
+.itext { flex:1; font-size:13px; line-height:1.5; }
+.itext strong { display:block; font-size:15px; margin-bottom:2px; }
+.iclose { background:rgba(255,255,255,.18); border:none; color:#fff; width:28px; height:28px; border-radius:50%; font-size:15px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; font-family:"Nunito",sans-serif; }
 
-/* ══════════════════════════════════════
-   PRINT
-══════════════════════════════════════ */
-@media print{
-  #bills-rpt-el,#bills-rpt-el *,
-  #pays-rpt-el,#pays-rpt-el *{ visibility:visible!important }
-  #bills-rpt-el,#pays-rpt-el{ position:fixed!important;top:0;left:0;width:100%;margin:0;padding:18px }
+/* === PRINT === */
+#prt-receipt,#prt-stmt,#prt-bills,#prt-pays { display:none; }
+@media print {
+  body * { visibility:hidden !important; }
+  #prt-receipt, #prt-receipt *,
+  #prt-stmt,    #prt-stmt *,
+  #prt-bills,   #prt-bills *,
+  #prt-pays,    #prt-pays * { visibility:visible !important; }
+  #prt-receipt { position:fixed !important; top:0; left:0; width:80mm; margin:0; padding:4px; }
+  #prt-stmt,#prt-bills,#prt-pays { position:fixed !important; top:0; left:0; width:100%; margin:0; padding:18px; }
+}
+.prt { font-family:"Courier New",monospace; font-size:12px; color:#000; background:#fff; }
+.prt-c { text-align:center; }
+.prt-b { font-weight:bold; }
+.prt-hr { border:none; border-top:1px dashed #000; margin:5px 0; }
+.prt-row { display:flex; justify-content:space-between; margin:2px 0; }
+.prt-tbl { width:100%; font-size:12px; border-collapse:collapse; }
+.prt-tbl th { text-align:left; border-bottom:1px solid #000; padding:3px 4px; }
+.prt-tbl td { padding:3px 4px; }
+.prt-tbl .tr { text-align:right; }
 
-  body *{visibility:hidden!important}
-  #receipt-el,#receipt-el *,
-  #stmt-el,#stmt-el *,
-  #rpt-el,#rpt-el *{visibility:visible!important}
-  #receipt-el{position:fixed!important;top:0;left:0;width:80mm;margin:0;padding:4px}
-  #stmt-el,#rpt-el{position:fixed!important;top:0;left:0;width:100%;margin:0;padding:18px}
-}
-
-/* ══════════════════════════════════════
-   RESPONSIVE
-══════════════════════════════════════ */
-@media(max-width:1024px){
-  .desk-nav{display:none}
-  .btabs{display:flex}
-  .main{padding:20px 14px calc(82px + env(safe-area-inset-bottom))}
-}
-@media(min-width:1025px){
-  .desk-nav{display:flex}
-  .btabs{display:none!important}
-  .main{padding:28px 20px 80px}
-}
-@media(max-width:600px){
-  .topbar{padding:0 14px;height:60px}
-  .brand-title{font-size:17px}
-  .topbar-right{display:none}
-  .ph-title{font-size:24px}
-  .stats{grid-template-columns:1fr 1fr}
-  .sc-val{font-size:26px}
-  .frow{grid-template-columns:1fr}
-  .fcard{padding:18px 14px}
-  .infogrid{grid-template-columns:1fr}
-  .ledger-summary{grid-template-columns:1fr 1fr 1fr}
-  .lsum-val{font-size:15px}
-}
-@media(max-width:380px){
-  .stats{grid-template-columns:1fr}
-  .ledger-summary{grid-template-columns:1fr}
-}
+/* === RESPONSIVE === */
+@media(max-width:1024px) { .dnav { display:none; } .btabs { display:flex; } .main { padding:18px 14px calc(80px + env(safe-area-inset-bottom)); } }
+@media(min-width:1025px) { .dnav { display:flex; } .btabs { display:none !important; } .main { padding:24px 20px 80px; } }
+@media(max-width:600px)  { .topbar { padding:0 13px; height:60px; } .brand-title { font-size:17px; } .topbar-right { display:none; } .ph-title { font-size:22px; } .stats { grid-template-columns:1fr 1fr; } .frow { grid-template-columns:1fr; } .fcard { padding:16px 13px; } .infogrid { grid-template-columns:1fr; } }
+@media(max-width:380px)  { .stats { grid-template-columns:1fr; } .lsum { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
 
-<!-- ══════════ TOPBAR ══════════ -->
+<!-- TOPBAR -->
 <header class="topbar">
   <div class="brand">
     <div class="brand-logo">💼</div>
@@ -537,113 +403,82 @@ a{text-decoration:none}
   <div class="topbar-right" id="top-date"></div>
 </header>
 
-<!-- ══════════ DESKTOP NAV ══════════ -->
-<nav class="desk-nav">
-  <button class="dnav-btn active" id="dn-dashboard" onclick="gotoPage('dashboard')"><span class="di">🏠</span> Dashboard</button>
-  <button class="dnav-btn" id="dn-debtors"   onclick="gotoPage('debtors')">  <span class="di">👥</span> All Debtors <span class="nbadge" id="badge">0</span></button>
-  <button class="dnav-btn" id="dn-add"        onclick="gotoPage('add')">       <span class="di">➕</span> Add Debtor</button>
-  <button class="dnav-btn" id="dn-payments"   onclick="gotoPage('payments')">  <span class="di">💳</span> Payments</button>
-  <button class="dnav-btn" id="dn-activity"   onclick="gotoPage('activity')">  <span class="di">📋</span> Reports & Activity</button>
-  <button class="dnav-btn" id="dn-ledger" onclick="gotoPage('ledger')" style="display:none"><span class="di">📒</span> Ledger</button>
+<!-- DESKTOP NAV -->
+<nav class="dnav">
+  <button class="dnav-btn active" id="dn-dashboard" onclick="gotoPage('dashboard')">🏠 Dashboard</button>
+  <button class="dnav-btn" id="dn-debtors"   onclick="gotoPage('debtors')">👥 All Debtors</button>
+  <button class="dnav-btn" id="dn-add"        onclick="gotoPage('add')">➕ Add Debtor</button>
+  <button class="dnav-btn" id="dn-payments"   onclick="gotoPage('payments')">💳 Payments</button>
+  <button class="dnav-btn" id="dn-activity"   onclick="gotoPage('activity')">📋 Reports &amp; Activity</button>
+  <button class="dnav-btn" id="dn-ledger"     onclick="gotoPage('ledger')" style="display:none">📒 Ledger</button>
 </nav>
 
-<!-- ══════════ PAGES ══════════ -->
+<!-- PAGES -->
 <main class="main">
 
   <!-- DASHBOARD -->
   <div class="page active" id="pg-dashboard">
     <div class="ph">
-      <div><h1 class="ph-title">Good day 👋</h1><div class="ph-sub" id="dash-datestr"></div></div>
+      <div><h1 class="ph-title">Good day 👋</h1><div class="ph-sub" id="dash-date"></div></div>
     </div>
     <div class="stats">
-      <div class="scard red">  <div class="sc-icon">⏰</div><div class="sc-val" id="ds-due">—</div><div class="sc-lbl">Due Accounts</div></div>
-      <div class="scard gold"> <div class="sc-icon">💰</div><div class="sc-val" id="ds-outstanding">—</div><div class="sc-lbl">Total Outstanding</div></div>
+      <div class="scard gold"> <div class="sc-icon">🟡</div><div class="sc-val" id="ds-due">—</div><div class="sc-lbl">Due Accounts</div></div>
+      <div class="scard red">  <div class="sc-icon">💰</div><div class="sc-val" id="ds-outstanding">—</div><div class="sc-lbl">Total Outstanding</div></div>
       <div class="scard green"><div class="sc-icon">✅</div><div class="sc-val" id="ds-collected">—</div><div class="sc-lbl">Collected This Month</div></div>
       <div class="scard teal"> <div class="sc-icon">👥</div><div class="sc-val" id="ds-total">—</div><div class="sc-lbl">Total Debtors</div></div>
     </div>
-
-    <div class="slabel">⚠️ Needs Attention</div>
+    <div class="slbl">⚠️ Needs Attention</div>
     <div class="dlist" id="dash-list"><div class="loading"><div class="spinner"></div><p>Loading...</p></div></div>
   </div>
 
   <!-- ALL DEBTORS -->
   <div class="page" id="pg-debtors">
     <div class="ph">
-      <div><h1 class="ph-title">All Debtors</h1><div class="ph-sub">Tap any debtor to open their account</div></div>
+      <div><h1 class="ph-title">All Debtors</h1><div class="ph-sub">Tap a debtor to open their account</div></div>
     </div>
     <div class="search-row">
-      <input class="search-input" type="search" id="search-inp" placeholder="🔍  Search by name or phone..." oninput="filterDebtors()">
+      <input class="search-input" type="search" id="search-inp" placeholder="🔍  Search name or phone..." oninput="filterDebtors()">
       <button class="btn btn-ink" onclick="gotoPage('add')">➕ Add New</button>
     </div>
     <div class="dlist" id="all-list"><div class="loading"><div class="spinner"></div><p>Loading...</p></div></div>
   </div>
 
-  <!-- LEDGER PAGE (full screen) -->
-  <div class="page" id="pg-ledger">
-    <div class="ph">
-      <div>
-        <h1 class="ph-title" id="ledger-page-title">Account Ledger</h1>
-        <div class="ph-sub" id="ledger-page-sub">Full transaction history</div>
-      </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button class="btn btn-gold" onclick="openAddBillFromPage()">＋ Add Bill</button>
-        <button class="btn btn-ink" onclick="openRecordPaymentFromPage()">💳 Payment</button>
-        <button class="btn btn-ghost" onclick="gotoPage('debtors')">← Back</button>
-      </div>
-    </div>
-    <!-- Summary -->
-    <div class="stats" style="margin-bottom:20px">
-      <div class="scard red">  <div class="sc-icon">🧾</div><div class="sc-val" id="lp-billed">₹0</div><div class="sc-lbl">Total Billed</div></div>
-      <div class="scard green"><div class="sc-icon">💳</div><div class="sc-val" id="lp-paid">₹0</div><div class="sc-lbl">Total Paid</div></div>
-      <div class="scard gold"> <div class="sc-icon">⚖️</div><div class="sc-val" id="lp-balance">₹0</div><div class="sc-lbl">Balance Due</div></div>
-      <div class="scard">      <div class="sc-icon">📋</div><div class="sc-val" id="lp-txns">0</div><div class="sc-lbl">Transactions</div></div>
-    </div>
-    <!-- Full ledger table -->
-    <div style="background:var(--surface);border:2px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh1)">
-      <div style="overflow-x:auto">
-        <div id="ledger-page-body">
-          <div class="loading"><div class="spinner"></div><p>Loading...</p></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- ADD / EDIT DEBTOR -->
   <div class="page" id="pg-add">
-    <div class="ph"><div><h1 class="ph-title" id="add-title">Add New Debtor</h1><div class="ph-sub">Fill in the details and click Save</div></div></div>
+    <div class="ph"><div><h1 class="ph-title" id="add-title">Add New Debtor</h1><div class="ph-sub">Fill in details and save</div></div></div>
     <div class="fcard">
       <input type="hidden" id="edit-id">
       <div class="ferr" id="save-err"></div>
       <div class="frow">
-        <div class="fgroup">
-          <label class="flabel">Full Name <span class="req">*</span></label>
+        <div class="fgrp">
+          <label class="flbl">Full Name <span class="req">*</span></label>
           <input class="finput" id="f-name" type="text" placeholder="e.g. Ramesh Kumar">
         </div>
-        <div class="fgroup">
-          <label class="flabel">Phone Number</label>
+        <div class="fgrp">
+          <label class="flbl">Phone Number</label>
           <input class="finput" id="f-phone" type="tel" placeholder="e.g. 98765 43210">
         </div>
       </div>
       <div class="frow">
-        <div class="fgroup">
-          <label class="flabel">Amount Owed (₹) <span class="req">*</span></label>
+        <div class="fgrp">
+          <label class="flbl">Amount Owed (R) <span class="req">*</span></label>
           <input class="finput" id="f-amount" type="number" placeholder="e.g. 5000" inputmode="decimal">
         </div>
-        <div class="fgroup">
-          <label class="flabel">Due Date <span class="req">*</span></label>
+        <div class="fgrp">
+          <label class="flbl">Due Date <span class="req">*</span></label>
           <input class="finput" id="f-due" type="date">
         </div>
       </div>
-      <div class="fgroup">
-          <label class="flabel">Status</label>
-          <select class="fselect" id="f-status">
-            <option value="due">🟡 Due</option>
-            <option value="paid">🟢 Paid</option>
-          </select>
-        </div>
-      <div class="fgroup">
-        <label class="flabel">Notes</label>
-        <textarea class="ftextarea" id="f-notes" placeholder="Any extra information..."></textarea>
+      <div class="fgrp">
+        <label class="flbl">Status</label>
+        <select class="fsel" id="f-status">
+          <option value="due">🟡 Due</option>
+          <option value="paid">🟢 Paid</option>
+        </select>
+      </div>
+      <div class="fgrp">
+        <label class="flbl">Notes</label>
+        <textarea class="ftxt" id="f-notes" placeholder="Any extra information..."></textarea>
       </div>
       <div class="factions">
         <button class="btn btn-ink btn-lg" id="save-btn" onclick="saveDebtor()">💾 Save Debtor</button>
@@ -659,65 +494,89 @@ a{text-decoration:none}
     <div id="pay-list"><div class="loading"><div class="spinner"></div><p>Loading...</p></div></div>
   </div>
 
-  <!-- ACTIVITY LOG PAGE -->
+  <!-- REPORTS & ACTIVITY -->
   <div class="page" id="pg-activity">
     <div class="ph">
-      <div><h1 class="ph-title">Reports & Activity 📋</h1><div class="ph-sub">Collection summary and today's activity</div></div>
+      <div><h1 class="ph-title">Reports &amp; Activity 📋</h1><div class="ph-sub">Collection summary and today's activity</div></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-ink" onclick="printDailyBills()">🧾 Print Today's Bills</button>
-        <button class="btn btn-gold" onclick="printDailyPayments()">💳 Print Today's Payments</button>
+        <button class="btn btn-ink" onclick="printDailyBills()">🧾 Print Bills</button>
+        <button class="btn btn-gold" onclick="printDailyPayments()">💳 Print Payments</button>
       </div>
     </div>
-    <div id="act-list"><div class="loading"><div class="spinner"></div><p>Loading...</p></div></div>
+    <div id="act-content"><div class="loading"><div class="spinner"></div><p>Loading...</p></div></div>
+  </div>
+
+  <!-- FULL LEDGER PAGE -->
+  <div class="page" id="pg-ledger">
+    <div class="ph">
+      <div>
+        <h1 class="ph-title" id="ledger-page-title">Account Ledger</h1>
+        <div class="ph-sub" id="ledger-page-sub">Full transaction history</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-gold" onclick="openAddBillFromLedger()">＋ Add Bill</button>
+        <button class="btn btn-ink"  onclick="openPaymentFromLedger()">💳 Record Payment</button>
+        <button class="btn btn-ghost" onclick="backFromLedger()">← Back</button>
+      </div>
+    </div>
+    <div class="stats" style="margin-bottom:20px">
+      <div class="scard red">  <div class="sc-icon">🧾</div><div class="sc-val" id="lp-billed">R 0</div><div class="sc-lbl">Total Billed</div></div>
+      <div class="scard green"><div class="sc-icon">💳</div><div class="sc-val" id="lp-paid">R 0</div><div class="sc-lbl">Total Paid</div></div>
+      <div class="scard gold"> <div class="sc-icon">⚖️</div><div class="sc-val" id="lp-balance">R 0</div><div class="sc-lbl">Balance Due</div></div>
+      <div class="scard teal"> <div class="sc-icon">📋</div><div class="sc-val" id="lp-txns">0</div><div class="sc-lbl">Transactions</div></div>
+    </div>
+    <div style="background:var(--srf);border:2px solid var(--bdr);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh1)">
+      <div style="overflow-x:auto" id="ledger-page-body">
+        <div class="loading"><div class="spinner"></div><p>Loading...</p></div>
+      </div>
+    </div>
   </div>
 
 </main>
 
-<!-- ══════════════════════════════════════
-     MODALS
-══════════════════════════════════════ -->
+<!-- ===== MODALS ===== -->
 
 <!-- DEBTOR DETAIL -->
 <div class="overlay" id="ov-detail">
-  <div class="modal" style="max-width:760px">
+  <div class="modal" style="max-width:740px">
     <div class="mhandle"></div>
-    <div class="d-header">
-      <div class="davatar default" id="det-avatar">?</div>
-      <div class="d-header-info">
+    <div class="d-hdr">
+      <div class="davatar def" id="det-avatar">?</div>
+      <div class="d-hdr-info">
         <div class="mtitle" id="det-name">—</div>
-        <div style="color:var(--muted);font-size:14px;margin-top:2px" id="det-phone">—</div>
+        <div style="color:var(--mut);font-size:13px;margin-top:2px" id="det-phone">—</div>
       </div>
-      <div class="d-header-amt">
+      <div class="d-hdr-amt">
         <div class="big due" id="det-amt">—</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px">Outstanding</div>
+        <div style="font-size:11px;color:var(--mut);margin-top:2px">Outstanding</div>
       </div>
     </div>
     <div class="infogrid">
       <div class="iblock"><div class="ikey">📋 Status</div><div class="ival" id="det-status">—</div></div>
       <div class="iblock"><div class="ikey">📅 Due Date</div><div class="ival" id="det-due">—</div></div>
-      <div class="iblock"><div class="ikey">📝 Notes</div><div class="ival" id="det-notes" style="font-size:15px;font-weight:600">—</div></div>
+      <div class="iblock" style="grid-column:1/-1"><div class="ikey">📝 Notes</div><div class="ival" id="det-notes" style="font-size:14px;font-weight:600">—</div></div>
     </div>
-    <!-- Ledger -->
+    <!-- Mini Ledger -->
     <div class="ledger-wrap">
-      <div class="ledger-header">
-        <div class="ledger-title">📒 Account Ledger</div>
+      <div class="ledger-hdr">
+        <div class="ledger-ttl">📒 Account Ledger</div>
         <button class="btn btn-gold btn-sm" onclick="openAddBill()">＋ Add Bill</button>
       </div>
-      <div class="ledger-summary">
-        <div class="lsum-block billed"><div class="lsum-key">Total Billed</div><div class="lsum-val" id="ls-billed">₹0</div></div>
-        <div class="lsum-block paid">  <div class="lsum-key">Total Paid</div>  <div class="lsum-val" id="ls-paid">₹0</div></div>
-        <div class="lsum-block balance"><div class="lsum-key">Balance Due</div><div class="lsum-val" id="ls-balance">₹0</div></div>
+      <div class="lsum">
+        <div class="lsb billed"> <div class="lsb-key">Total Billed</div><div class="lsb-val" id="ls-billed">R 0</div></div>
+        <div class="lsb paid">   <div class="lsb-key">Total Paid</div>  <div class="lsb-val" id="ls-paid">R 0</div></div>
+        <div class="lsb balance"><div class="lsb-key">Balance Due</div> <div class="lsb-val" id="ls-balance">R 0</div></div>
       </div>
-      <div class="ltable-wrap"><div id="ledger-body"><em style="display:block;padding:14px;color:var(--muted);font-size:14px">No transactions yet. Add a bill to get started.</em></div></div>
+      <div class="ltbl-wrap"><div id="ledger-body"><em style="display:block;padding:12px;color:var(--mut);font-size:13px">No transactions yet. Add a bill to start.</em></div></div>
     </div>
-    <!-- Call history -->
+    <!-- Call History -->
     <div class="callwrap">
-      <div class="call-title">📞 Call History</div>
-      <div id="det-calls"><em style="color:var(--muted);font-size:14px">No calls logged yet.</em></div>
+      <div class="call-ttl">📞 Call History</div>
+      <div id="det-calls"><em style="color:var(--mut);font-size:13px">No calls logged yet.</em></div>
     </div>
     <div class="mactions">
       <button class="btn btn-teal btn-lg"  onclick="openLogCall()">📞 Log a Call</button>
-      <button class="btn btn-ink btn-lg"   onclick="openRecordPayment()">💳 Record a Payment</button>
+      <button class="btn btn-ink btn-lg"   onclick="openPayment()">💳 Record a Payment</button>
       <button class="btn btn-gold btn-lg"  onclick="openFullLedger()">📒 Open Full Ledger</button>
       <button class="btn btn-ghost btn-lg" onclick="printStatement()">📄 Statement</button>
       <button class="btn btn-ghost btn-lg" onclick="editCurrentDebtor()">✏️ Edit Details</button>
@@ -733,28 +592,28 @@ a{text-decoration:none}
     <h2 class="mtitle">🧾 Add Credit Purchase</h2>
     <div class="msub" id="bill-for">Adding purchase to account</div>
     <div class="frow">
-      <div class="fgroup">
-        <label class="flabel">Bill Number <span class="req">*</span></label>
-        <input class="finput" id="b-num" type="text" placeholder="e.g. BILL-001" style="font-size:19px;font-weight:700">
+      <div class="fgrp">
+        <label class="flbl">Bill Number <span class="req">*</span></label>
+        <input class="finput" id="b-num" type="text" placeholder="e.g. BILL-001" style="font-size:18px;font-weight:700">
       </div>
-      <div class="fgroup">
-        <label class="flabel">Date <span class="req">*</span></label>
+      <div class="fgrp">
+        <label class="flbl">Date <span class="req">*</span></label>
         <input class="finput" id="b-date" type="date">
       </div>
     </div>
     <div class="frow">
-      <div class="fgroup">
-        <label class="flabel">Amount (₹) <span class="req">*</span></label>
+      <div class="fgrp">
+        <label class="flbl">Amount (R) <span class="req">*</span></label>
         <input class="finput" id="b-amt" type="number" placeholder="e.g. 3500" inputmode="decimal">
       </div>
-      <div class="fgroup">
-        <label class="flabel">Description</label>
+      <div class="fgrp">
+        <label class="flbl">Description</label>
         <input class="finput" id="b-desc" type="text" placeholder="e.g. Grocery items">
       </div>
     </div>
     <div class="factions">
       <button class="btn btn-ink btn-lg" onclick="saveBill()">💾 Save Bill</button>
-      <button class="btn btn-ghost btn-lg" onclick="closeOverlay('ov-bill');openOverlay('ov-detail')">Cancel</button>
+      <button class="btn btn-ghost btn-lg" onclick="cancelBill()">Cancel</button>
     </div>
   </div>
 </div>
@@ -765,30 +624,30 @@ a{text-decoration:none}
     <div class="mhandle"></div>
     <h2 class="mtitle">📞 Log a Call</h2>
     <div class="msub" id="call-for">Recording call outcome</div>
-    <div class="fgroup">
-      <label class="flabel">What happened on this call? <span class="req">*</span></label>
-      <select class="fselect" id="call-outcome">
+    <div class="fgrp">
+      <label class="flbl">What happened? <span class="req">*</span></label>
+      <select class="fsel" id="call-outcome">
         <option value="">— Please choose —</option>
-        <option>✅ Agreed to pay in full</option>
-        <option>📅 Set up a payment plan</option>
-        <option>🤝 Promised to pay — date agreed</option>
-        <option>📵 No answer — left voicemail</option>
-        <option>📵 No answer — no voicemail</option>
-        <option>❌ Refused to pay</option>
-        <option>🔄 Call back requested</option>
+        <option>Agreed to pay in full</option>
+        <option>Set up a payment plan</option>
+        <option>Promised to pay — date agreed</option>
+        <option>No answer — left voicemail</option>
+        <option>No answer — no voicemail</option>
+        <option>Refused to pay</option>
+        <option>Call back requested</option>
       </select>
     </div>
-    <div class="fgroup">
-      <label class="flabel">Notes (optional)</label>
-      <textarea class="ftextarea" id="call-notes" placeholder="Extra details..."></textarea>
+    <div class="fgrp">
+      <label class="flbl">Notes (optional)</label>
+      <textarea class="ftxt" id="call-notes" placeholder="Extra details..."></textarea>
     </div>
-    <div class="fgroup">
-      <label class="flabel">Schedule follow-up call</label>
+    <div class="fgrp">
+      <label class="flbl">Schedule follow-up call</label>
       <input class="finput" id="call-followup" type="date">
     </div>
     <div class="factions">
-      <button class="btn btn-ink btn-lg" onclick="saveCall()">💾 Save Call Record</button>
-      <button class="btn btn-ghost btn-lg" onclick="closeOverlay('ov-call');openOverlay('ov-detail')">Cancel</button>
+      <button class="btn btn-ink btn-lg" onclick="saveCall()">💾 Save Call</button>
+      <button class="btn btn-ghost btn-lg" onclick="cancelCall()">Cancel</button>
     </div>
   </div>
 </div>
@@ -800,39 +659,41 @@ a{text-decoration:none}
     <h2 class="mtitle">💳 Record a Payment</h2>
     <div class="msub" id="pay-for">Recording payment</div>
     <div class="frow">
-      <div class="fgroup">
-        <label class="flabel">Amount Paid (₹) <span class="req">*</span></label>
+      <div class="fgrp">
+        <label class="flbl">Amount Paid (R) <span class="req">*</span></label>
         <input class="finput" id="p-amt" type="number" placeholder="e.g. 2500" inputmode="decimal">
       </div>
-      <div class="fgroup">
-        <label class="flabel">Payment Date <span class="req">*</span></label>
+      <div class="fgrp">
+        <label class="flbl">Payment Date <span class="req">*</span></label>
         <input class="finput" id="p-date" type="date">
       </div>
     </div>
-    <div class="fgroup">
-        <label class="flabel">Payment Method</label>
-        <select class="fselect" id="p-method">
+    <div class="frow">
+      <div class="fgrp">
+        <label class="flbl">Payment Method</label>
+        <select class="fsel" id="p-method">
           <option>Cash</option>
           <option>UPI / GPay</option>
           <option>Bank Transfer / NEFT</option>
           <option>Cheque</option>
           <option>Card Payment</option>
         </select>
+      </div>
+      <div class="fgrp">
+        <label class="flbl">Reference / Notes</label>
+        <input class="finput" id="p-ref" type="text" placeholder="Transaction ID">
+      </div>
     </div>
-    <div class="fgroup">
-      <label class="flabel">Bank Reference / Notes</label>
-      <input class="finput" id="p-ref" type="text" placeholder="Transaction ID or reference number">
-    </div>
-    <div class="fgroup">
-      <label class="flabel">Update debtor status to:</label>
-      <select class="fselect" id="p-status">
+    <div class="fgrp">
+      <label class="flbl">Update debtor status to:</label>
+      <select class="fsel" id="p-status">
         <option value="due">🟡 Still Owes More — keep as Due</option>
         <option value="paid">🟢 Fully Paid — close account</option>
       </select>
     </div>
     <div class="factions">
       <button class="btn btn-ink btn-lg" onclick="savePayment()">💾 Save Payment</button>
-      <button class="btn btn-ghost btn-lg" onclick="closeOverlay('ov-payment');openOverlay('ov-detail')">Cancel</button>
+      <button class="btn btn-ghost btn-lg" onclick="cancelPayment()">Cancel</button>
     </div>
   </div>
 </div>
@@ -843,9 +704,9 @@ a{text-decoration:none}
     <div class="mhandle"></div>
     <h2 class="mtitle">🎯 Set Monthly Target</h2>
     <div class="msub">How much do you want to collect this month?</div>
-    <div class="fgroup">
-      <label class="flabel">Target Amount (₹) <span class="req">*</span></label>
-      <input class="finput" id="tgt-inp" type="number" placeholder="e.g. 50000" inputmode="decimal" style="font-size:22px;height:62px">
+    <div class="fgrp">
+      <label class="flbl">Target Amount (R) <span class="req">*</span></label>
+      <input class="finput" id="tgt-inp" type="number" placeholder="e.g. 50000" inputmode="decimal" style="font-size:22px;height:60px">
     </div>
     <div class="factions">
       <button class="btn btn-ink btn-lg" onclick="saveTarget()">💾 Save Target</button>
@@ -854,555 +715,563 @@ a{text-decoration:none}
   </div>
 </div>
 
-<!-- HIDDEN PRINT AREAS -->
-<!-- DAILY BILLS PRINT -->
-<div id="bills-rpt-el" style="display:none;font-family:'Courier New',monospace;padding:20px;color:#000;background:#fff">
-  <div style="text-align:center;margin-bottom:12px">
-    <div style="font-size:20px;font-weight:bold">MANWANI TRADERS</div>
-    <div style="font-size:15px;font-weight:bold;margin-top:3px">DAILY BILLS REPORT</div>
-    <div style="font-size:12px;color:#555;margin-top:3px" id="bills-rpt-date">—</div>
-  </div>
-  <hr style="border:1px solid #000;margin:8px 0">
-  <table style="width:100%;font-size:12px;margin-bottom:8px">
-    <tr><td><b>Total Bills Today:</b></td><td id="bills-rpt-count">—</td></tr>
-    <tr><td><b>Total Amount Billed:</b></td><td id="bills-rpt-total" style="font-weight:bold;font-size:15px">—</td></tr>
-  </table>
-  <hr style="border:1px solid #000;margin:8px 0">
-  <div id="bills-rpt-body"></div>
-  <hr style="border:1px solid #000;margin:12px 0">
-  <div style="text-align:center;font-size:11px;color:#555">End of Bills Report — Manwani Traders</div>
-</div>
-
-<!-- DAILY PAYMENTS PRINT -->
-<div id="pays-rpt-el" style="display:none;font-family:'Courier New',monospace;padding:20px;color:#000;background:#fff">
-  <div style="text-align:center;margin-bottom:12px">
-    <div style="font-size:20px;font-weight:bold">MANWANI TRADERS</div>
-    <div style="font-size:15px;font-weight:bold;margin-top:3px">DAILY PAYMENTS REPORT</div>
-    <div style="font-size:12px;color:#555;margin-top:3px" id="pays-rpt-date">—</div>
-  </div>
-  <hr style="border:1px solid #000;margin:8px 0">
-  <table style="width:100%;font-size:12px;margin-bottom:8px">
-    <tr><td><b>Total Payments Today:</b></td><td id="pays-rpt-count">—</td></tr>
-    <tr><td><b>Total Amount Collected:</b></td><td id="pays-rpt-total" style="font-weight:bold;font-size:15px;color:green">—</td></tr>
-  </table>
-  <hr style="border:1px solid #000;margin:8px 0">
-  <div id="pays-rpt-body"></div>
-  <hr style="border:1px solid #000;margin:12px 0">
-  <div style="text-align:center;font-size:11px;color:#555">End of Payments Report — Manwani Traders</div>
-</div>
-
-<div id="receipt-el">
-  <div class="rc rb" style="font-size:15px">MANWANI TRADERS</div>
-  <div class="rc" style="font-size:11px">Payment Receipt</div>
-  <hr class="rline">
-  <div class="rrow2"><span>Receipt No:</span><span id="r-num" class="rb">—</span></div>
-  <div class="rrow2"><span>Date:</span><span id="r-date">—</span></div>
-  <hr class="rline">
-  <div class="rrow2"><span>Debtor:</span><span id="r-name">—</span></div>
-  <div class="rrow2"><span>Phone:</span><span id="r-phone">—</span></div>
-  <hr class="rline">
-  <div class="rrow2 rb"><span>Amount Paid:</span><span id="r-amt">—</span></div>
-  <div class="rrow2"><span>Method:</span><span id="r-method">—</span></div>
-  <div class="rrow2"><span>Reference:</span><span id="r-ref">—</span></div>
-  <div class="rrow2"><span>Balance Left:</span><span id="r-bal">—</span></div>
-  <hr class="rline">
-  <div class="rc" style="font-size:11px">Printed: <span id="r-printed">—</span></div>
-  <div class="rc rb" style="margin-top:4px">Thank you for your payment!</div>
+<!-- PRINT: RECEIPT -->
+<div id="prt-receipt" class="prt">
+  <div class="prt-c prt-b" style="font-size:15px">MANWANI TRADERS</div>
+  <div class="prt-c" style="font-size:11px">Payment Receipt</div>
+  <hr class="prt-hr">
+  <div class="prt-row"><span>Receipt No:</span><span id="r-num" class="prt-b">—</span></div>
+  <div class="prt-row"><span>Date:</span><span id="r-date">—</span></div>
+  <hr class="prt-hr">
+  <div class="prt-row"><span>Debtor:</span><span id="r-name">—</span></div>
+  <div class="prt-row"><span>Phone:</span><span id="r-phone">—</span></div>
+  <hr class="prt-hr">
+  <div class="prt-row prt-b"><span>Amount Paid:</span><span id="r-amt">—</span></div>
+  <div class="prt-row"><span>Method:</span><span id="r-method">—</span></div>
+  <div class="prt-row"><span>Reference:</span><span id="r-ref">—</span></div>
+  <div class="prt-row"><span>Balance Left:</span><span id="r-bal">—</span></div>
+  <hr class="prt-hr">
+  <div class="prt-c" style="font-size:11px">Printed: <span id="r-printed">—</span></div>
+  <div class="prt-c prt-b" style="margin-top:4px">Thank you for your payment!</div>
   <br><br>
 </div>
-<div id="stmt-el">
-  <div style="text-align:center;margin-bottom:14px">
+
+<!-- PRINT: STATEMENT -->
+<div id="prt-stmt" class="prt" style="padding:20px">
+  <div class="prt-c" style="margin-bottom:12px">
     <div style="font-size:20px;font-weight:bold">MANWANI TRADERS</div>
-    <div style="font-size:14px;margin-top:3px">STATEMENT OF ACCOUNT</div>
+    <div style="font-size:14px;margin-top:3px;font-weight:bold">STATEMENT OF ACCOUNT</div>
     <div style="font-size:12px;color:#555;margin-top:3px" id="stmt-date">—</div>
   </div>
-  <hr style="border:1px solid #000;margin:10px 0">
-  <table style="width:100%;font-size:13px;margin-bottom:10px">
+  <hr style="border:1px solid #000;margin:8px 0">
+  <table style="width:100%;font-size:13px;margin-bottom:8px">
     <tr><td><b>Debtor:</b></td><td id="stmt-name">—</td><td><b>Phone:</b></td><td id="stmt-phone">—</td></tr>
-    <tr><td><b>Status:</b></td><td id="stmt-status">—</td></tr>
-    <tr><td><b>Balance Due:</b></td><td id="stmt-bal" style="font-weight:bold;color:red">—</td><td><b>Due Date:</b></td><td id="stmt-due">—</td></tr>
+    <tr><td><b>Status:</b></td><td id="stmt-status">—</td><td><b>Due Date:</b></td><td id="stmt-due">—</td></tr>
+    <tr><td><b>Balance Due:</b></td><td id="stmt-bal" style="font-weight:bold;color:red;font-size:15px">—</td></tr>
   </table>
-  <hr style="border:1px solid #000;margin:10px 0">
+  <hr style="border:1px solid #000;margin:8px 0">
   <div id="stmt-body"></div>
-  <hr style="border:1px solid #000;margin:14px 0">
-  <div style="text-align:center;font-size:11px;color:#555">Computer-generated statement — Manwani Traders</div>
+  <hr style="border:1px solid #000;margin:12px 0">
+  <div class="prt-c" style="font-size:11px;color:#555">Computer-generated statement — Manwani Traders</div>
 </div>
-<div id="rpt-el">
-  <div style="text-align:center;margin-bottom:14px">
+
+<!-- PRINT: TODAY BILLS -->
+<div id="prt-bills" class="prt" style="padding:20px">
+  <div class="prt-c" style="margin-bottom:12px">
     <div style="font-size:20px;font-weight:bold">MANWANI TRADERS</div>
-    <div style="font-size:15px;font-weight:bold;margin-top:3px">DAILY COLLECTION REPORT</div>
-    <div style="font-size:12px;color:#555;margin-top:3px" id="rpt-date-lbl">—</div>
+    <div style="font-size:15px;font-weight:bold;margin-top:3px">DAILY BILLS REPORT</div>
+    <div style="font-size:12px;color:#555;margin-top:3px" id="bills-date">—</div>
   </div>
-  <hr style="border:1px solid #000;margin:10px 0">
-  <table style="width:100%;font-size:13px;margin-bottom:10px">
-    <tr><td><b>Total Collected:</b></td><td id="rpt-total" style="font-weight:bold;color:green;font-size:16px">—</td></tr>
-    <tr><td><b>Payments Today:</b></td><td id="rpt-npay">—</td></tr>
-    <tr><td><b>Calls Logged:</b></td><td id="rpt-ncall">—</td></tr>
-    <tr><td><b>New Debtors:</b></td><td id="rpt-nnew">—</td></tr>
+  <hr style="border:1px solid #000;margin:8px 0">
+  <table style="width:100%;font-size:12px;margin-bottom:8px">
+    <tr><td><b>Total Bills Today:</b></td><td id="bills-count">—</td></tr>
+    <tr><td><b>Total Amount Billed:</b></td><td id="bills-total" style="font-weight:bold;font-size:15px">—</td></tr>
   </table>
-  <hr style="border:1px solid #000;margin:10px 0">
-  <div id="rpt-body"></div>
-  <hr style="border:1px solid #000;margin:14px 0">
-  <div style="text-align:center;font-size:11px;color:#555">End of Daily Report — Manwani Traders</div>
+  <hr style="border:1px solid #000;margin:8px 0">
+  <div id="bills-body"></div>
+  <hr style="border:1px solid #000;margin:12px 0">
+  <div class="prt-c" style="font-size:11px;color:#555">End of Bills Report — Manwani Traders</div>
+</div>
+
+<!-- PRINT: TODAY PAYMENTS -->
+<div id="prt-pays" class="prt" style="padding:20px">
+  <div class="prt-c" style="margin-bottom:12px">
+    <div style="font-size:20px;font-weight:bold">MANWANI TRADERS</div>
+    <div style="font-size:15px;font-weight:bold;margin-top:3px">DAILY PAYMENTS REPORT</div>
+    <div style="font-size:12px;color:#555;margin-top:3px" id="pays-date">—</div>
+  </div>
+  <hr style="border:1px solid #000;margin:8px 0">
+  <table style="width:100%;font-size:12px;margin-bottom:8px">
+    <tr><td><b>Total Payments Today:</b></td><td id="pays-count">—</td></tr>
+    <tr><td><b>Total Amount Collected:</b></td><td id="pays-total" style="font-weight:bold;font-size:15px;color:green">—</td></tr>
+  </table>
+  <hr style="border:1px solid #000;margin:8px 0">
+  <div id="pays-body"></div>
+  <hr style="border:1px solid #000;margin:12px 0">
+  <div class="prt-c" style="font-size:11px;color:#555">End of Payments Report — Manwani Traders</div>
 </div>
 
 <!-- TARGET MINI WIDGET -->
 <div class="target-mini" id="target-mini" onclick="openOverlay('ov-target')">
-  <div class="tm-header">
-    <span class="tm-title">🎯 Monthly Target</span>
-    <span class="tm-pct" id="target-pct">—</span>
+  <div class="tm-hdr">
+    <span class="tm-ttl">🎯 Monthly Target</span>
+    <span class="tm-pct" id="tm-pct">Not set</span>
   </div>
-  <div class="tm-track"><div class="tm-fill" id="target-bar"></div></div>
+  <div class="tm-track"><div class="tm-fill" id="tm-bar" style="width:0%"></div></div>
   <div class="tm-vals">
-    <span>Collected: <strong id="target-collected">R 0</strong></span>
-    <span id="target-remaining"></span>
+    <span>Collected: <strong id="tm-collected">R 0</strong></span>
+    <span id="tm-remaining"></span>
   </div>
 </div>
 
 <!-- BOTTOM TABS -->
 <nav class="btabs" id="btabs">
   <button class="btab active" id="bt-dashboard" onclick="gotoPage('dashboard')"><span class="bi">🏠</span>Home</button>
-  <button class="btab" id="bt-debtors"   onclick="gotoPage('debtors')">  <span class="bi">👥</span>Debtors</button>
-  <button class="btab" id="bt-add"        onclick="gotoPage('add')">       <span class="bi">➕</span>Add</button>
-  <button class="btab" id="bt-payments"   onclick="gotoPage('payments')">  <span class="bi">💳</span>Payments</button>
-  <button class="btab" id="bt-activity"   onclick="gotoPage('activity')">  <span class="bi">📋</span>Reports</button>
-  <button class="btab" id="bt-ledger" onclick="gotoPage('ledger')" style="display:none"><span class="bi">📒</span>Ledger</button>
+  <button class="btab" id="bt-debtors"   onclick="gotoPage('debtors')"><span class="bi">👥</span>Debtors</button>
+  <button class="btab" id="bt-add"       onclick="gotoPage('add')"><span class="bi">➕</span>Add</button>
+  <button class="btab" id="bt-payments"  onclick="gotoPage('payments')"><span class="bi">💳</span>Payments</button>
+  <button class="btab" id="bt-activity"  onclick="gotoPage('activity')"><span class="bi">📋</span>Reports</button>
+  <button class="btab" id="bt-ledger"    onclick="gotoPage('ledger')" style="display:none"><span class="bi">📒</span>Ledger</button>
 </nav>
 
 <!-- INSTALL BANNER -->
 <div class="ibanner" id="install-banner">
-  <div style="font-size:32px;flex-shrink:0">📲</div>
-  <div class="itext"><strong>Add to Home Screen</strong>Tap Share → "Add to Home Screen" to install DebtTrack as an app</div>
+  <div style="font-size:30px;flex-shrink:0">📲</div>
+  <div class="itext"><strong>Add to Home Screen</strong>Tap Share then "Add to Home Screen" to install DebtTrack</div>
   <button class="iclose" onclick="dismissInstall()">✕</button>
 </div>
 
 <!-- TOAST -->
 <div class="toast" id="toast-el"></div>
 
-<!-- ══════════════════════════════════════
-     JAVASCRIPT
-══════════════════════════════════════ -->
 <script>
-'use strict';
+"use strict";
 
-// ── STATE ─────────────────────────────
+// ─── STATE ────────────────────────────────────────────
 var allDebtors    = [];
 var currentDebtor = null;
-var currentPage   = 'dashboard';
+var currentPage   = "dashboard";
+var billFromLedger    = false;
+var paymentFromLedger = false;
 
-// ── INIT ──────────────────────────────
-document.addEventListener('DOMContentLoaded', function(){
+// ─── INIT ─────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", function() {
   var now = new Date();
-  var ds  = now.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  var el  = document.getElementById('top-date');
-  if(el) el.textContent = ds;
-  var ds2 = document.getElementById('dash-datestr');
-  if(ds2) ds2.textContent = ds;
-
-  // Default dates
-  var today    = now.toISOString().split('T')[0];
-  var tom      = new Date(now); tom.setDate(now.getDate()+1);
-  var tomStr   = tom.toISOString().split('T')[0];
-  setVal('f-due', today);
-  setVal('p-date', today);
-  setVal('b-date', today);
-  setVal('call-followup', tomStr);
-
+  var ds  = now.toLocaleDateString("en-IN", {weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  setTxt("top-date",  ds);
+  setTxt("dash-date", ds);
+  var today = toDateStr(now);
+  setVal("f-due",        today);
+  setVal("p-date",       today);
+  setVal("b-date",       today);
+  setVal("call-followup", toDateStr(new Date(now.getTime() + 86400000)));
   loadDashboard();
-
-  // iPad install banner
+  // iOS install banner
   var isIOS      = /iPad|iPhone|iPod/.test(navigator.userAgent);
   var standalone = window.navigator.standalone === true;
-  var dismissed  = localStorage.getItem('ib-dismissed');
-  if(isIOS && !standalone && !dismissed){
-    setTimeout(function(){ show('install-banner','ibanner show'); }, 3000);
+  if (isIOS && !standalone && !localStorage.getItem("ib-gone")) {
+    setTimeout(function() {
+      var el = gid("install-banner");
+      if (el) el.classList.add("show");
+    }, 3000);
   }
 });
 
-function dismissInstall(){
-  var el = document.getElementById('install-banner');
-  if(el) el.classList.remove('show');
-  localStorage.setItem('ib-dismissed','1');
+function dismissInstall() {
+  var el = gid("install-banner");
+  if (el) el.classList.remove("show");
+  localStorage.setItem("ib-gone", "1");
 }
 
-// ── NAVIGATION ────────────────────────
-function gotoPage(name){
+// ─── NAVIGATION ───────────────────────────────────────
+function gotoPage(name) {
   currentPage = name;
-  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
-  document.querySelectorAll('.dnav-btn').forEach(function(b){ b.classList.remove('active'); });
-  document.querySelectorAll('.btab').forEach(function(b){ b.classList.remove('active'); });
-  var pg = document.getElementById('pg-'+name);   if(pg)  pg.classList.add('active');
-  var dn = document.getElementById('dn-'+name);   if(dn)  dn.classList.add('active');
-  var bt = document.getElementById('bt-'+name);   if(bt)  bt.classList.add('active');
-  if(name==='add' && !getVal('edit-id')) resetAddForm();
-  if(name==='debtors')  loadAllDebtors();
-  if(name==='payments') loadPayments();
-  if(name==='followups')loadFollowups();
-  if(name==='activity') loadActivity();
-  window.scrollTo(0,0);
+  document.querySelectorAll(".page").forEach(function(p)      { p.classList.remove("active"); });
+  document.querySelectorAll(".dnav-btn").forEach(function(b)  { b.classList.remove("active"); });
+  document.querySelectorAll(".btab").forEach(function(b)      { b.classList.remove("active"); });
+  var pg = gid("pg-" + name);  if (pg) pg.classList.add("active");
+  var dn = gid("dn-" + name);  if (dn) dn.classList.add("active");
+  var bt = gid("bt-" + name);  if (bt) bt.classList.add("active");
+  if (name === "add" && !getVal("edit-id")) resetAddForm();
+  if (name === "debtors")  loadAllDebtors();
+  if (name === "payments") loadPayments();
+  if (name === "activity") loadActivity();
+  window.scrollTo(0, 0);
 }
 
-// ── OVERLAY HELPERS ───────────────────
-function openOverlay(id){
-  var el = document.getElementById(id);
-  if(el) el.classList.add('open');
-}
-function closeOverlay(id){
-  var el = document.getElementById(id);
-  if(el) el.classList.remove('open');
-}
-document.addEventListener('click', function(e){
-  if(e.target && e.target.classList.contains('overlay')){
-    e.target.classList.remove('open');
+// ─── OVERLAY ──────────────────────────────────────────
+function openOverlay(id)  { var el = gid(id); if (el) el.classList.add("open"); }
+function closeOverlay(id) { var el = gid(id); if (el) el.classList.remove("open"); }
+document.addEventListener("click", function(e) {
+  if (e.target && e.target.classList.contains("overlay")) {
+    e.target.classList.remove("open");
   }
 });
 
-// ── FETCH HELPERS ─────────────────────
-async function fetchDebtors(){
-  try{
-    var snap = await DEBTORS.orderBy('amount_owed','desc').get();
-    return snap.docs.map(function(d){ return merge({id:d.id}, d.data()); });
-  }catch(e){
-    toast('Could not load debtors: '+e.message,'err');
+// ─── FIREBASE FETCH ───────────────────────────────────
+async function fetchDebtors() {
+  try {
+    var snap = await DEBTORS.orderBy("amount_owed", "desc").get();
+    return snap.docs.map(function(d) { return obj(d); });
+  } catch(e) {
+    showToast("Could not load debtors: " + e.message, "err");
     return [];
   }
 }
 
-// ── DASHBOARD ─────────────────────────
-async function loadDashboard(){
+// ─── DASHBOARD ────────────────────────────────────────
+async function loadDashboard() {
   allDebtors = await fetchDebtors();
-  var overdue     = allDebtors.filter(function(d){ return d.status==='due'; }).length;
-  var outstanding = allDebtors.reduce(function(s,d){ return s+(parseFloat(d.amount_owed)||0); },0);
-
-  var monthStart = new Date(); monthStart.setDate(1);
-  var msStr      = monthStart.toISOString().split('T')[0];
-  var collected  = 0;
-  try{
-    var ps = await PAYMENTS.where('payment_date','>=',msStr).get();
-    ps.forEach(function(d){ collected+=(parseFloat(d.data().amount)||0); });
-  }catch(e){}
-
-  setText('ds-due',     String(overdue));
-  setText('ds-outstanding', 'R '+fmt(outstanding));
-  setText('ds-collected',   'R '+fmt(collected));
-  setText('ds-total',       String(allDebtors.length));
-  setText('badge',          String(allDebtors.length));
-
-  updateTargetBar(collected);
-
-  var urgent = allDebtors.filter(function(d){ return d.status==='due'; }).slice(0,6);
-  renderDebtorList('dash-list', urgent, '🎉 No urgent accounts right now!');
+  var due         = allDebtors.filter(function(d) { return d.status === "due"; }).length;
+  var outstanding = allDebtors.reduce(function(s,d) { return s + (num(d.amount_owed)); }, 0);
+  var collected   = 0;
+  try {
+    var msStr = toDateStr(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+    var ps = await PAYMENTS.where("payment_date", ">=", msStr).get();
+    ps.forEach(function(d) { collected += num(d.data().amount); });
+  } catch(e) {}
+  setTxt("ds-due",         String(due));
+  setTxt("ds-outstanding", "R " + fmt(outstanding));
+  setTxt("ds-collected",   "R " + fmt(collected));
+  setTxt("ds-total",       String(allDebtors.length));
+  updateTargetWidget(collected);
+  var urgent = allDebtors.filter(function(d) { return d.status === "due"; }).slice(0, 8);
+  renderList("dash-list", urgent, "No due accounts right now!");
 }
 
-async function loadAllDebtors(){
+async function loadAllDebtors() {
   allDebtors = await fetchDebtors();
-  renderDebtorList('all-list', allDebtors, 'No debtors yet. Tap ➕ Add Debtor to get started.');
+  renderList("all-list", allDebtors, "No debtors yet. Tap Add Debtor to get started.");
 }
 
-function filterDebtors(){
-  var q = (document.getElementById('search-inp').value||'').toLowerCase();
-  var filtered = allDebtors.filter(function(d){
-    return (d.name||'').toLowerCase().includes(q)||(d.phone||'').toLowerCase().includes(q);
+function filterDebtors() {
+  var q = (getVal("search-inp")).toLowerCase();
+  var f = allDebtors.filter(function(d) {
+    return (d.name||"").toLowerCase().includes(q) || (d.phone||"").toLowerCase().includes(q);
   });
-  renderDebtorList('all-list', filtered, 'No debtors match your search.');
+  renderList("all-list", f, "No debtors match your search.");
 }
 
-function renderDebtorList(containerId, list, emptyMsg){
-  var el = document.getElementById(containerId);
-  if(!el) return;
-  if(!list.length){
-    el.innerHTML = '<div class="empty-state"><div class="ei">👥</div><p class="et">'+esc(emptyMsg)+'</p></div>';
+function renderList(containerId, list, emptyMsg) {
+  var el = gid(containerId);
+  if (!el) return;
+  if (!list.length) {
+    el.innerHTML = '<div class="empty-state"><div class="ei">👥</div><p class="et">' + esc(emptyMsg) + "</p></div>";
     return;
   }
-  var statusLabel = {due:'🟡 Due',paid:'🟢 Paid'};
-  el.innerHTML = list.map(function(d){
-    var init = initials(d.name);
-    var st   = d.status||'default';
-    var sl   = statusLabel[st]||st;
-    var dl   = d.due_date ? daysLabel(d.due_date) : '';
-    return '<div class="dcard" onclick="openDebtor(\''+d.id+'\')">'+
-      '<div class="davatar '+st+'">'+esc(init)+'</div>'+
-      '<div class="dinfo">'+
-        '<div class="dname">'+esc(d.name||'—')+'</div>'+
-        '<div class="dphone">📞 '+esc(d.phone||'No phone')+'</div>'+
-        '<span class="dpill '+st+'">'+sl+'</span>'+
-      '</div>'+
-      '<div class="damt">'+
-        '<div class="damt-val '+st+'">R '+fmt(d.amount_owed)+'</div>'+
-        '<div class="damt-days">'+esc(dl)+'</div>'+
-      '</div>'+
-      '<div class="dchev">›</div>'+
-    '</div>';
-  }).join('');
+  var statusLabel = {due:"🟡 Due", paid:"🟢 Paid"};
+  el.innerHTML = list.map(function(d) {
+    var st = d.status === "paid" ? "paid" : "due";
+    var sl = statusLabel[st] || st;
+    var dl = d.due_date ? daysLabel(d.due_date) : "";
+    return '<div class="dcard" onclick="openDebtor(\'' + d.id + '\')">' +
+      '<div class="davatar ' + st + '">' + esc(initials(d.name)) + "</div>" +
+      '<div class="dinfo">' +
+        '<div class="dname">' + esc(d.name || "—") + "</div>" +
+        '<div class="dphone">📞 ' + esc(d.phone || "No phone") + "</div>" +
+        '<span class="dpill ' + st + '">' + sl + "</span>" +
+      "</div>" +
+      '<div class="damt">' +
+        '<div class="damt-val ' + st + '">R ' + fmt(d.amount_owed) + "</div>" +
+        '<div class="damt-days">' + esc(dl) + "</div>" +
+      "</div>" +
+      '<div class="dchev">›</div>' +
+    "</div>";
+  }).join("");
 }
 
-// ── DEBTOR DETAIL ─────────────────────
-async function openDebtor(id){
-  // Find debtor
-  currentDebtor = allDebtors.find(function(d){ return d.id===id; }) || null;
-  if(!currentDebtor){
-    try{
+// ─── DEBTOR DETAIL ────────────────────────────────────
+async function openDebtor(id) {
+  currentDebtor = allDebtors.find(function(d) { return d.id === id; }) || null;
+  if (!currentDebtor) {
+    try {
       var doc = await DEBTORS.doc(id).get();
-      if(!doc.exists){ toast('Debtor not found','err'); return; }
-      currentDebtor = merge({id:doc.id}, doc.data());
-    }catch(e){ toast('Could not load debtor: '+e.message,'err'); return; }
+      if (!doc.exists) { showToast("Debtor not found", "err"); return; }
+      currentDebtor = obj(doc);
+    } catch(e) { showToast("Could not load debtor: " + e.message, "err"); return; }
   }
   var d = currentDebtor;
-  var statusLabel = {due:'🟡 Due',paid:'🟢 Paid'};
-
-  // Fill header
-  var av = document.getElementById('det-avatar');
-  if(av){ av.textContent=initials(d.name); av.className='davatar '+(d.status||'default'); }
-  setText('det-name',   d.name||'—');
-  setText('det-phone',  '📞 '+(d.phone||'No phone'));
-  setText('det-status', statusLabel[d.status]||d.status||'—');
-  setText('det-due',    d.due_date ? fmtDate(d.due_date) : '—');
-  setText('det-notes',  d.notes||'—');
-
-  // Load ledger and calls in parallel
-  loadLedger(d);
+  var statusLabel = {due:"🟡 Due", paid:"🟢 Paid"};
+  var st = d.status === "paid" ? "paid" : "due";
+  var av = gid("det-avatar");
+  if (av) { av.textContent = initials(d.name); av.className = "davatar " + st; }
+  setTxt("det-name",   d.name   || "—");
+  setTxt("det-phone",  "📞 " + (d.phone || "No phone"));
+  setTxt("det-status", statusLabel[st] || st);
+  setTxt("det-due",    d.due_date ? fmtDate(d.due_date) : "—");
+  setTxt("det-notes",  d.notes  || "—");
+  var amtEl = gid("det-amt");
+  if (amtEl) { amtEl.textContent = "R " + fmt(d.amount_owed); amtEl.className = "big " + st; }
+  loadMiniLedger(d);
   loadCallHistory(d.id);
-
-  openOverlay('ov-detail');
+  openOverlay("ov-detail");
 }
 
-async function loadLedger(d){
-  var ledgerEl = document.getElementById('ledger-body');
-  if(!ledgerEl) return;
-  ledgerEl.innerHTML = '<div class="loading" style="padding:16px"><div class="spinner"></div></div>';
-
-  try{
-    var results = await Promise.all([
-      BILLS.where('debtor_id','==',d.id).orderBy('date','asc').get(),
-      PAYMENTS.where('debtor_id','==',d.id).orderBy('payment_date','asc').get()
+async function loadMiniLedger(d) {
+  var bodyEl = gid("ledger-body");
+  if (bodyEl) bodyEl.innerHTML = '<div class="loading" style="padding:14px"><div class="spinner"></div></div>';
+  try {
+    var r = await Promise.all([
+      BILLS.where("debtor_id", "==", d.id).orderBy("date", "asc").get(),
+      PAYMENTS.where("debtor_id", "==", d.id).orderBy("payment_date", "asc").get()
     ]);
-    var bSnap = results[0], pSnap = results[1];
-
-    var bills    = bSnap.docs.map(function(x){ return merge({id:x.id,kind:'bill'},x.data()); });
-    var payments = pSnap.docs.map(function(x){ return merge({id:x.id,kind:'pay'},x.data()); });
-
-    // Include initial debt as first entry if debtor has an original amount
-    var initAmt = parseFloat(d.initial_amount||d.amount_owed)||0;
-    var hasInitial = (d.initial_amount||0) > 0;
-    if(!hasInitial && bills.length===0 && (parseFloat(d.amount_owed)||0)>0){
-      // Legacy debtors: treat amount_owed as initial debt
-      hasInitial = true; initAmt = parseFloat(d.amount_owed)||0;
-    }
-    if(hasInitial){
-      bills.unshift({
-        id:'__init__', kind:'bill',
-        date: d.created_at&&d.created_at.toDate ? d.created_at.toDate().toISOString().split('T')[0] : (d.due_date||''),
-        bill_number:'INITIAL',
-        amount: initAmt,
-        description:'Opening Balance / Initial Debt',
-        isInitial: true
-      });
-    }
-
-    var totalBilled = bills.reduce(function(s,b){ return s+(parseFloat(b.amount)||0); },0);
-    var totalPaid   = payments.reduce(function(s,p){ return s+(parseFloat(p.amount)||0); },0);
-    var balance     = Math.max(0, totalBilled-totalPaid);
-
-    setText('ls-billed',  'R '+fmt(totalBilled));
-    setText('ls-paid',    'R '+fmt(totalPaid));
-    setText('ls-balance', 'R '+fmt(balance));
-
-    // Update outstanding in header
-    var amtEl = document.getElementById('det-amt');
-    if(amtEl){ amtEl.textContent='R '+fmt(balance); amtEl.className='big '+(d.status||'overdue'); }
-
-    // Merge and sort by date
-    var all = bills.concat(payments).sort(function(a,b){
-      var da = a.kind==='bill' ? a.date : a.payment_date;
-      var db = b.kind==='bill' ? b.date : b.payment_date;
-      return da>db?1:da<db?-1:0;
-    });
-
-    if(!all.length){
-      ledgerEl.innerHTML = '<em style="display:block;padding:14px;color:var(--muted);font-size:14px">No transactions yet. Tap ＋ Add Bill to get started.</em>';
+    var bills = r[0].docs.map(function(x) { return obj(x, {kind:"bill"}); });
+    var pays  = r[1].docs.map(function(x) { return obj(x, {kind:"pay"}); });
+    var initAmt = num(d.initial_amount) || num(d.amount_owed);
+    bills.unshift({id:"__init__", kind:"bill", date:d.due_date||"", bill_number:"INITIAL", amount:initAmt, description:"Opening Balance", isInitial:true});
+    var totalBilled = bills.reduce(function(s,b) { return s + num(b.amount); }, 0);
+    var totalPaid   = pays.reduce(function(s,p)  { return s + num(p.amount); }, 0);
+    var balance     = Math.max(0, totalBilled - totalPaid);
+    setTxt("ls-billed",  "R " + fmt(totalBilled));
+    setTxt("ls-paid",    "R " + fmt(totalPaid));
+    setTxt("ls-balance", "R " + fmt(balance));
+    var amtEl = gid("det-amt");
+    if (amtEl) amtEl.textContent = "R " + fmt(balance);
+    var all = bills.concat(pays).sort(sortByDate);
+    if (!all.length) {
+      if (bodyEl) bodyEl.innerHTML = '<em style="display:block;padding:12px;color:var(--mut);font-size:13px">No transactions yet.</em>';
       return;
     }
-
     var running = 0;
-    var rows = all.map(function(t){
-      var isBill  = t.kind==='bill';
-      var date    = isBill ? t.date : t.payment_date;
-      var ref     = isBill ? (t.bill_number||'—') : (t.receipt_number||t.reference||'—');
-      var desc    = isBill ? (t.description||'Credit Purchase') : (t.method||'Payment');
-      var amtVal  = parseFloat(t.amount)||0;
-      running    += isBill ? amtVal : -amtVal;
-      running     = Math.max(0,running);
-      var amtStr  = isBill ? '+ R '+fmt(amtVal) : '− R '+fmt(amtVal);
-      var amtCol  = isBill ? 'color:var(--red)' : 'color:var(--green)';
-      var rowCls  = isBill ? 'bill-row' : 'pay-row';
-      var typeCls = isBill ? 'bill' : 'pay';
-      var typeLbl = isBill ? '🧾 Bill' : '💳 Payment';
-      var delFn   = isBill ? 'delBill(\''+t.id+'\')' : 'delPayment(\''+t.id+'\')';
-      var balCls  = running===0 ? 'lbal clear' : 'lbal owe';
-      return '<tr class="'+rowCls+'">'+
-        '<td style="font-size:12px;color:var(--muted)">'+esc(date||'—')+'</td>'+
-        '<td><span class="ltype '+typeCls+'">'+typeLbl+'</span></td>'+
-        '<td><span class="lref">'+esc(ref)+'</span></td>'+
-        '<td style="font-size:12px">'+esc(desc)+'</td>'+
-        '<td style="'+amtCol+';font-weight:800;text-align:right;white-space:nowrap">'+esc(amtStr)+'</td>'+
-        '<td class="'+balCls+'">R '+fmt(running)+'</td>'+
-        '<td>'+(t.isInitial?'':('<button class="ldel" onclick="'+delFn+'">🗑</button>'))+'</td>'+
-      '</tr>';
-    }).join('');
-
-    ledgerEl.innerHTML =
-      '<table class="ltable">'+
-        '<thead><tr>'+
-          '<th>Date</th><th>Type</th><th>Ref #</th>'+
-          '<th>Description</th><th style="text-align:right">Amount</th>'+
-          '<th style="text-align:right">Balance</th><th></th>'+
-        '</tr></thead>'+
-        '<tbody>'+rows+'</tbody>'+
-      '</table>';
-
-  }catch(e){
-    ledgerEl.innerHTML = '<em style="display:block;padding:14px;color:var(--red);font-size:14px">Could not load ledger: '+esc(e.message)+'</em>';
+    var rows = all.map(function(t) { return ledgerRow(t, running = calcRunning(running, t)); }).join("");
+    if (bodyEl) bodyEl.innerHTML = ledgerTable(rows);
+  } catch(e) {
+    if (bodyEl) bodyEl.innerHTML = '<em style="display:block;padding:12px;color:var(--red);font-size:13px">Could not load: ' + esc(e.message) + "</em>";
   }
 }
 
-async function loadCallHistory(debtorId){
-  var el = document.getElementById('det-calls');
-  if(!el) return;
-  try{
-    var snap = await CALLS.where('debtor_id','==',debtorId).orderBy('created_at','desc').get();
-    if(snap.empty){
-      el.innerHTML='<em style="color:var(--muted);font-size:14px">No calls logged yet.</em>';
+async function loadCallHistory(debtorId) {
+  var el = gid("det-calls");
+  if (!el) return;
+  try {
+    var snap = await CALLS.where("debtor_id", "==", debtorId).orderBy("created_at", "desc").get();
+    if (snap.empty) { el.innerHTML = '<em style="color:var(--mut);font-size:13px">No calls logged yet.</em>'; return; }
+    el.innerHTML = snap.docs.map(function(c) {
+      var cd = c.data();
+      var dt = cd.created_at && cd.created_at.toDate ? cd.created_at.toDate().toLocaleDateString("en-IN", {day:"numeric",month:"short",year:"numeric"}) : (cd.created_at || "");
+      return '<div class="centry">' +
+        '<div class="cdate">' + esc(dt) + "</div>" +
+        '<div class="coutcome">' + esc(cd.outcome || "") + "</div>" +
+        (cd.notes ? '<div class="cnote">' + esc(cd.notes) + "</div>" : "") +
+        (cd.followup_date ? '<div class="cnote">📅 Follow-up: ' + esc(cd.followup_date) + "</div>" : "") +
+      "</div>";
+    }).join("");
+  } catch(e) {
+    el.innerHTML = '<em style="color:var(--mut);font-size:13px">Could not load calls.</em>';
+  }
+}
+
+// ─── FULL LEDGER PAGE ─────────────────────────────────
+function openFullLedger() {
+  if (!currentDebtor) { showToast("No debtor selected", "err"); return; }
+  closeOverlay("ov-detail");
+  setTxt("ledger-page-title", currentDebtor.name + " — Ledger");
+  setTxt("ledger-page-sub", "📞 " + (currentDebtor.phone || "No phone") + "  ·  Due: " + (currentDebtor.due_date || "—"));
+  var dn = gid("dn-ledger"); if (dn) dn.style.display = "";
+  var bt = gid("bt-ledger"); if (bt) bt.style.display = "";
+  gotoPage("ledger");
+  loadFullLedgerPage();
+}
+
+function backFromLedger() {
+  var dn = gid("dn-ledger"); if (dn) dn.style.display = "none";
+  var bt = gid("bt-ledger"); if (bt) bt.style.display = "none";
+  gotoPage("debtors");
+}
+
+async function loadFullLedgerPage() {
+  var d = currentDebtor; if (!d) return;
+  var bodyEl = gid("ledger-page-body");
+  if (bodyEl) bodyEl.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading...</p></div>';
+  try {
+    var r = await Promise.all([
+      BILLS.where("debtor_id", "==", d.id).orderBy("date", "asc").get(),
+      PAYMENTS.where("debtor_id", "==", d.id).orderBy("payment_date", "asc").get()
+    ]);
+    var bills = r[0].docs.map(function(x) { return obj(x, {kind:"bill"}); });
+    var pays  = r[1].docs.map(function(x) { return obj(x, {kind:"pay"}); });
+    var initAmt = num(d.initial_amount) || num(d.amount_owed);
+    bills.unshift({id:"__init__", kind:"bill", date:d.due_date||"", bill_number:"INITIAL", amount:initAmt, description:"Opening Balance", isInitial:true});
+    var totalBilled = bills.reduce(function(s,b) { return s + num(b.amount); }, 0);
+    var totalPaid   = pays.reduce(function(s,p)  { return s + num(p.amount); }, 0);
+    var balance = Math.max(0, totalBilled - totalPaid);
+    setTxt("lp-billed",  "R " + fmt(totalBilled));
+    setTxt("lp-paid",    "R " + fmt(totalPaid));
+    setTxt("lp-balance", "R " + fmt(balance));
+    var all = bills.concat(pays).sort(sortByDate);
+    setTxt("lp-txns", String(all.length));
+    if (!all.length) {
+      if (bodyEl) bodyEl.innerHTML = '<div class="empty-state"><div class="ei">📒</div><p class="et">No transactions yet.</p></div>';
       return;
     }
-    el.innerHTML = snap.docs.map(function(c){
-      var cd = c.data();
-      var dt = cd.created_at&&cd.created_at.toDate ? cd.created_at.toDate().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : (cd.created_at||'');
-      return '<div class="centry">'+
-        '<div class="cdate">'+esc(dt)+'</div>'+
-        '<div class="coutcome">'+esc(cd.outcome||'')+'</div>'+
-        (cd.notes?'<div class="cnote">'+esc(cd.notes)+'</div>':'')+
-        (cd.followup_date?'<div class="cnote">📅 Follow-up: '+esc(cd.followup_date)+'</div>':'')+
-      '</div>';
-    }).join('');
-  }catch(e){
-    el.innerHTML='<em style="color:var(--muted);font-size:14px">Could not load call history.</em>';
+    var running = 0;
+    var rows = all.map(function(t) { return ledgerRow(t, running = calcRunning(running, t)); }).join("");
+    if (bodyEl) bodyEl.innerHTML = ledgerTable(rows);
+  } catch(e) {
+    if (bodyEl) bodyEl.innerHTML = '<div class="empty-state"><p class="et">Error: ' + esc(e.message) + "</p></div>";
   }
 }
 
-// ── ADD BILL ──────────────────────────
-function openAddBill(){
-  if(!currentDebtor){ toast('No debtor selected','err'); return; }
-  setText('bill-for','Adding purchase to: '+currentDebtor.name);
-  setVal('b-num','');
-  setVal('b-date', new Date().toISOString().split('T')[0]);
-  setVal('b-amt','');
-  setVal('b-desc','');
-  closeOverlay('ov-detail');
-  openOverlay('ov-bill');
+function openAddBillFromLedger() {
+  if (!currentDebtor) { showToast("No debtor selected", "err"); return; }
+  billFromLedger = true;
+  openAddBill();
 }
 
-async function saveBill(){
-  var billNum = getVal('b-num').trim();
-  var date    = getVal('b-date');
-  var amt     = parseFloat(getVal('b-amt'));
-  var desc    = getVal('b-desc').trim();
+function openPaymentFromLedger() {
+  if (!currentDebtor) { showToast("No debtor selected", "err"); return; }
+  paymentFromLedger = true;
+  openPayment();
+}
 
-  if(!billNum){ toast('Please enter a bill number','err'); return; }
-  if(!date)   { toast('Please select a date','err'); return; }
-  if(!amt)    { toast('Please enter the amount','err'); return; }
-  if(!currentDebtor){ toast('No debtor selected','err'); return; }
+// ─── LEDGER HELPERS ───────────────────────────────────
+function sortByDate(a, b) {
+  var da = a.kind === "bill" ? a.date : a.payment_date;
+  var db = b.kind === "bill" ? b.date : b.payment_date;
+  return da > db ? 1 : da < db ? -1 : 0;
+}
 
-  try{
+function calcRunning(running, t) {
+  var amt = num(t.amount);
+  return Math.max(0, running + (t.kind === "bill" ? amt : -amt));
+}
+
+function ledgerRow(t, running) {
+  var isBill = t.kind === "bill";
+  var date   = isBill ? t.date : t.payment_date;
+  var ref    = isBill ? (t.bill_number || "—") : (t.receipt_number || t.reference || "—");
+  var desc   = isBill ? (t.description || "Credit Purchase") : (t.method || "Payment");
+  var amt    = num(t.amount);
+  var amtStr = (isBill ? "+ R " : "- R ") + fmt(amt);
+  var amtCol = isBill ? "color:var(--red)" : "color:var(--grn)";
+  var delFn  = t.isInitial ? "" : (isBill ? "delBill('" + t.id + "')" : "delPayment('" + t.id + "')");
+  return '<tr class="' + (isBill ? "brow" : "prow") + '">' +
+    '<td style="font-size:12px;color:var(--mut);white-space:nowrap">' + esc(date || "—") + "</td>" +
+    '<td><span class="ltype ' + (isBill ? "bill" : "pay") + '">' + (isBill ? "Bill" : "Pay") + "</span></td>" +
+    '<td><span class="lref">' + esc(ref) + "</span></td>" +
+    '<td style="font-size:12px;max-width:160px">' + esc(desc) + "</td>" +
+    '<td style="' + amtCol + ';font-weight:800;text-align:right;white-space:nowrap">' + esc(amtStr) + "</td>" +
+    '<td class="lbal ' + (running === 0 ? "clear" : "owe") + '">R ' + fmt(running) + "</td>" +
+    "<td>" + (delFn ? '<button class="ldel" onclick="' + delFn + '">🗑</button>' : "") + "</td>" +
+  "</tr>";
+}
+
+function ledgerTable(rows) {
+  return '<table class="ltbl">' +
+    "<thead><tr>" +
+    "<th>Date</th><th>Type</th><th>Ref #</th><th>Description</th>" +
+    '<th style="text-align:right">Amount</th><th style="text-align:right">Balance</th><th></th>' +
+    "</tr></thead>" +
+    "<tbody>" + rows + "</tbody>" +
+  "</table>";
+}
+
+// ─── ADD BILL ─────────────────────────────────────────
+function openAddBill() {
+  if (!currentDebtor) { showToast("No debtor selected", "err"); return; }
+  setTxt("bill-for", "Adding purchase to: " + currentDebtor.name);
+  setVal("b-num", "");
+  setVal("b-date", toDateStr(new Date()));
+  setVal("b-amt", "");
+  setVal("b-desc", "");
+  if (!billFromLedger) closeOverlay("ov-detail");
+  openOverlay("ov-bill");
+}
+
+function cancelBill() {
+  closeOverlay("ov-bill");
+  if (billFromLedger) { billFromLedger = false; }
+  else { openOverlay("ov-detail"); }
+}
+
+async function saveBill() {
+  var billNum = getVal("b-num").trim();
+  var date    = getVal("b-date");
+  var amt     = parseFloat(getVal("b-amt"));
+  var desc    = getVal("b-desc").trim();
+  if (!billNum) { showToast("Please enter a bill number", "err"); return; }
+  if (!date)    { showToast("Please select a date", "err"); return; }
+  if (!amt)     { showToast("Please enter the amount", "err"); return; }
+  if (!currentDebtor) { showToast("No debtor selected", "err"); return; }
+  try {
     await BILLS.add({
       debtor_id:   currentDebtor.id,
       bill_number: billNum,
       date:        date,
       amount:      amt,
-      description: desc||'Credit Purchase',
+      description: desc || "Credit Purchase",
       created_at:  firebase.firestore.FieldValue.serverTimestamp()
     });
-    var newAmt = (parseFloat(currentDebtor.amount_owed)||0) + amt;
-    await DEBTORS.doc(currentDebtor.id).update({amount_owed:newAmt});
+    var newAmt = num(currentDebtor.amount_owed) + amt;
+    await DEBTORS.doc(currentDebtor.id).update({amount_owed: newAmt});
     currentDebtor.amount_owed = newAmt;
-    toast('Bill added!','ok');
-    closeOverlay('ov-bill');
+    showToast("Bill added!", "ok");
+    closeOverlay("ov-bill");
     loadDashboard();
-    if(currentPage==='ledger'){ loadFullLedgerPage(); }
+    if (billFromLedger) { billFromLedger = false; loadFullLedgerPage(); }
     else { openDebtor(currentDebtor.id); }
-  }catch(e){ toast('Could not save bill: '+e.message,'err'); }
+  } catch(e) { showToast("Could not save bill: " + e.message, "err"); }
 }
 
-async function delBill(billId){
-  if(!confirm('Delete this bill? Cannot be undone.')) return;
-  try{
+async function delBill(billId) {
+  if (!confirm("Delete this bill? Cannot be undone.")) return;
+  try {
     var doc = await BILLS.doc(billId).get();
-    var amt = parseFloat(doc.data().amount)||0;
+    var amt = num(doc.data().amount);
     await BILLS.doc(billId).delete();
-    var newAmt = Math.max(0,(parseFloat(currentDebtor.amount_owed)||0)-amt);
-    await DEBTORS.doc(currentDebtor.id).update({amount_owed:newAmt});
+    var newAmt = Math.max(0, num(currentDebtor.amount_owed) - amt);
+    await DEBTORS.doc(currentDebtor.id).update({amount_owed: newAmt});
     currentDebtor.amount_owed = newAmt;
-    toast('Bill deleted','ok');
+    showToast("Bill deleted", "ok");
     loadDashboard();
-    if(currentPage==='ledger'){ loadFullLedgerPage(); }
-    else { openDebtor(currentDebtor.id); }
-  }catch(e){ toast('Could not delete: '+e.message,'err'); }
+    if (currentPage === "ledger") loadFullLedgerPage();
+    else openDebtor(currentDebtor.id);
+  } catch(e) { showToast("Could not delete: " + e.message, "err"); }
 }
 
-// ── LOG CALL ──────────────────────────
-function openLogCall(){
-  if(!currentDebtor){ toast('No debtor selected','err'); return; }
-  setText('call-for','Call with: '+currentDebtor.name);
-  setVal('call-outcome','');
-  setVal('call-notes','');
-  setVal('call-followup', new Date(Date.now()+86400000).toISOString().split('T')[0]);
-  closeOverlay('ov-detail');
-  openOverlay('ov-call');
+// ─── LOG CALL ─────────────────────────────────────────
+function openLogCall() {
+  if (!currentDebtor) { showToast("No debtor selected", "err"); return; }
+  setTxt("call-for", "Call with: " + currentDebtor.name);
+  setVal("call-outcome", "");
+  setVal("call-notes", "");
+  setVal("call-followup", toDateStr(new Date(Date.now() + 86400000)));
+  closeOverlay("ov-detail");
+  openOverlay("ov-call");
 }
 
-async function saveCall(){
-  var outcome = getVal('call-outcome');
-  if(!outcome){ toast('Please choose what happened on the call','err'); return; }
-  if(!currentDebtor){ toast('No debtor selected','err'); return; }
-  try{
+function cancelCall() {
+  closeOverlay("ov-call");
+  openOverlay("ov-detail");
+}
+
+async function saveCall() {
+  var outcome = getVal("call-outcome");
+  if (!outcome) { showToast("Please choose what happened on the call", "err"); return; }
+  if (!currentDebtor) { showToast("No debtor selected", "err"); return; }
+  try {
     await CALLS.add({
       debtor_id:     currentDebtor.id,
       outcome:       outcome,
-      notes:         getVal('call-notes').trim(),
-      followup_date: getVal('call-followup'),
+      notes:         getVal("call-notes").trim(),
+      followup_date: getVal("call-followup"),
       created_at:    firebase.firestore.FieldValue.serverTimestamp()
     });
-    toast('Call logged!','ok');
-    closeOverlay('ov-call');
+    showToast("Call logged!", "ok");
+    closeOverlay("ov-call");
     openDebtor(currentDebtor.id);
-  }catch(e){ toast('Could not save call: '+e.message,'err'); }
+  } catch(e) { showToast("Could not save call: " + e.message, "err"); }
 }
 
-// ── RECORD PAYMENT ────────────────────
-function openRecordPayment(){
-  if(!currentDebtor){ toast('No debtor selected','err'); return; }
-  setText('pay-for','Payment from: '+currentDebtor.name);
-  setVal('p-amt','');
-  setVal('p-ref','');
-  setVal('p-date', new Date().toISOString().split('T')[0]);
-  closeOverlay('ov-detail');
-  openOverlay('ov-payment');
+// ─── RECORD PAYMENT ───────────────────────────────────
+function openPayment() {
+  if (!currentDebtor) { showToast("No debtor selected", "err"); return; }
+  setTxt("pay-for", "Payment from: " + currentDebtor.name);
+  setVal("p-amt", "");
+  setVal("p-ref", "");
+  setVal("p-date", toDateStr(new Date()));
+  if (!paymentFromLedger) closeOverlay("ov-detail");
+  openOverlay("ov-payment");
 }
 
-async function savePayment(){
-  var amt     = parseFloat(getVal('p-amt'));
-  var date    = getVal('p-date');
-  if(!amt)    { toast('Please enter the amount paid','err'); return; }
-  if(!date)   { toast('Please select a payment date','err'); return; }
-  if(!currentDebtor){ toast('No debtor selected','err'); return; }
-  // Auto-generate sequential receipt number
-  var receipt = await genReceiptNumber();
+function cancelPayment() {
+  closeOverlay("ov-payment");
+  if (paymentFromLedger) { paymentFromLedger = false; }
+  else { openOverlay("ov-detail"); }
+}
 
-  var method    = getVal('p-method');
-  var ref       = getVal('p-ref').trim();
-  var newStatus = getVal('p-status');
-  var newAmt    = Math.max(0,(parseFloat(currentDebtor.amount_owed)||0)-amt);
-
-  try{
+async function savePayment() {
+  var amt    = parseFloat(getVal("p-amt"));
+  var date   = getVal("p-date");
+  if (!amt)  { showToast("Please enter the amount paid", "err"); return; }
+  if (!date) { showToast("Please select a payment date", "err"); return; }
+  if (!currentDebtor) { showToast("No debtor selected", "err"); return; }
+  var receipt   = await genReceiptNumber();
+  var method    = getVal("p-method");
+  var ref       = getVal("p-ref").trim();
+  var newStatus = getVal("p-status");
+  var newAmt    = Math.max(0, num(currentDebtor.amount_owed) - amt);
+  try {
     await PAYMENTS.add({
       debtor_id:      currentDebtor.id,
       debtor_name:    currentDebtor.name,
@@ -1413,629 +1282,424 @@ async function savePayment(){
       reference:      ref,
       created_at:     firebase.firestore.FieldValue.serverTimestamp()
     });
-    await DEBTORS.doc(currentDebtor.id).update({amount_owed:newAmt, status:newStatus});
+    await DEBTORS.doc(currentDebtor.id).update({amount_owed: newAmt, status: newStatus});
     currentDebtor.amount_owed = newAmt;
     currentDebtor.status      = newStatus;
-
-    toast('Payment saved!','ok');
-    closeOverlay('ov-payment');
-    if(currentPage==='ledger'){ loadFullLedgerPage(); }
-
-    // Print receipt
-    printReceipt({
-      receipt_number: receipt,
-      name:    currentDebtor.name,
-      phone:   currentDebtor.phone||'—',
-      amount:  amt,
-      method:  method,
-      ref:     ref||'—',
-      balance: newAmt,
-      date:    date
-    });
-
+    showToast("Payment saved! Receipt " + receipt, "ok");
+    closeOverlay("ov-payment");
+    printReceipt({receipt_number:receipt, name:currentDebtor.name, phone:currentDebtor.phone||"—", amount:amt, method:method, ref:ref||"—", balance:newAmt, date:date});
     loadDashboard();
-    openDebtor(currentDebtor.id);
-  }catch(e){ toast('Could not save payment: '+e.message,'err'); }
-}
-
-async function delPayment(payId){
-  if(!confirm('Delete this payment? Cannot be undone.')) return;
-  try{
-    var doc = await PAYMENTS.doc(payId).get();
-    var amt = parseFloat(doc.data().amount)||0;
-    await PAYMENTS.doc(payId).delete();
-    var newAmt = (parseFloat(currentDebtor.amount_owed)||0)+amt;
-    await DEBTORS.doc(currentDebtor.id).update({amount_owed:newAmt});
-    currentDebtor.amount_owed = newAmt;
-    toast('Payment deleted','ok');
-    loadDashboard();
-    if(currentPage==='ledger'){ loadFullLedgerPage(); }
+    if (paymentFromLedger) { paymentFromLedger = false; loadFullLedgerPage(); }
     else { openDebtor(currentDebtor.id); }
-  }catch(e){ toast('Could not delete: '+e.message,'err'); }
+  } catch(e) { showToast("Could not save payment: " + e.message, "err"); }
 }
 
-// ── SAVE DEBTOR ───────────────────────
-async function genReceiptNumber(){
-  try{
-    var snap = await PAYMENTS.orderBy('created_at','desc').limit(1).get();
+async function delPayment(payId) {
+  if (!confirm("Delete this payment? Cannot be undone.")) return;
+  try {
+    var doc = await PAYMENTS.doc(payId).get();
+    var amt = num(doc.data().amount);
+    await PAYMENTS.doc(payId).delete();
+    var newAmt = num(currentDebtor.amount_owed) + amt;
+    await DEBTORS.doc(currentDebtor.id).update({amount_owed: newAmt});
+    currentDebtor.amount_owed = newAmt;
+    showToast("Payment deleted", "ok");
+    loadDashboard();
+    if (currentPage === "ledger") loadFullLedgerPage();
+    else openDebtor(currentDebtor.id);
+  } catch(e) { showToast("Could not delete: " + e.message, "err"); }
+}
+
+// ─── AUTO RECEIPT NUMBER ──────────────────────────────
+async function genReceiptNumber() {
+  try {
+    var snap = await PAYMENTS.orderBy("created_at", "desc").limit(1).get();
     var last = 0;
-    if(!snap.empty){
-      var rn = snap.docs[0].data().receipt_number||'';
-      var parts = rn.split('-');
-      var num = parseInt(parts[parts.length-1],10);
-      if(!isNaN(num)) last = num;
+    if (!snap.empty) {
+      var rn = snap.docs[0].data().receipt_number || "";
+      var parts = rn.split("-");
+      var n = parseInt(parts[parts.length - 1], 10);
+      if (!isNaN(n)) last = n;
     }
-    return 'RCP-'+String(last+1).padStart(3,'0');
-  }catch(e){
-    return 'RCP-'+String(Date.now()).slice(-4);
+    return "RCP-" + String(last + 1).padStart(3, "0");
+  } catch(e) {
+    return "RCP-" + String(Date.now()).slice(-4);
   }
 }
 
-function showSaveErr(msg){
-  var el = document.getElementById('save-err');
-  if(!el) return;
-  el.textContent = '❌ '+msg;
-  el.style.display = 'block';
-  el.scrollIntoView({behavior:'smooth',block:'center'});
+// ─── SAVE / EDIT DEBTOR ───────────────────────────────
+function showSaveErr(msg) {
+  var el = gid("save-err");
+  if (!el) return;
+  el.textContent = "❌ " + msg;
+  el.style.display = "block";
+  el.scrollIntoView({behavior:"smooth", block:"center"});
 }
 
-async function saveDebtor(){
-  var el = document.getElementById('save-err');
-  if(el) el.style.display='none';
-
-  var name   = getVal('f-name').trim();
-  var amount = getVal('f-amount');
-  var due    = getVal('f-due');
-
-  if(!name)  { showSaveErr('Please enter the debtor name.'); return; }
-  if(!amount){ showSaveErr('Please enter the amount owed.'); return; }
-  if(!due)   { showSaveErr('Please select a due date.'); return; }
-
+async function saveDebtor() {
+  var el = gid("save-err"); if (el) el.style.display = "none";
+  var name   = getVal("f-name").trim();
+  var amount = getVal("f-amount");
+  var due    = getVal("f-due");
+  if (!name)   { showSaveErr("Please enter the debtor name."); return; }
+  if (!amount) { showSaveErr("Please enter the amount owed."); return; }
+  if (!due)    { showSaveErr("Please select a due date."); return; }
+  var parsedAmt = parseFloat(amount);
   var payload = {
-    name:       name,
-    phone:      getVal('f-phone').trim(),
-    amount_owed:parseFloat(amount),
-    due_date:   due,
-    status:     getVal('f-status'),
-    notes:      getVal('f-notes').trim(),
-    updated_at: firebase.firestore.FieldValue.serverTimestamp()
+    name:        name,
+    phone:       getVal("f-phone").trim(),
+    amount_owed: parsedAmt,
+    due_date:    due,
+    status:      getVal("f-status"),
+    notes:       getVal("f-notes").trim(),
+    updated_at:  firebase.firestore.FieldValue.serverTimestamp()
   };
-
-  var editId  = getVal('edit-id');
-  var btn     = document.getElementById('save-btn');
-  if(btn){ btn.textContent='Saving...'; btn.disabled=true; }
-
-  try{
-    if(editId){
+  var editId = getVal("edit-id");
+  var btn = gid("save-btn");
+  if (btn) { btn.textContent = "Saving..."; btn.disabled = true; }
+  try {
+    if (editId) {
       await DEBTORS.doc(editId).update(payload);
     } else {
       payload.created_at    = firebase.firestore.FieldValue.serverTimestamp();
-      payload.initial_amount = parseFloat(amount);
+      payload.initial_amount = parsedAmt;
       await DEBTORS.add(payload);
     }
-    if(btn){ btn.textContent=editId?'💾 Update Debtor':'💾 Save Debtor'; btn.disabled=false; }
-    toast(editId?'Debtor updated!':'Debtor added!','ok');
+    if (btn) { btn.textContent = editId ? "💾 Update Debtor" : "💾 Save Debtor"; btn.disabled = false; }
+    showToast(editId ? "Debtor updated!" : "Debtor added!", "ok");
     resetAddForm();
     loadDashboard();
-    gotoPage('debtors');
-  }catch(e){
-    if(btn){ btn.textContent=editId?'💾 Update Debtor':'💾 Save Debtor'; btn.disabled=false; }
+    gotoPage("debtors");
+  } catch(e) {
+    if (btn) { btn.textContent = editId ? "💾 Update Debtor" : "💾 Save Debtor"; btn.disabled = false; }
     showSaveErr(e.message);
   }
 }
 
-function resetAddForm(){
-  setVal('edit-id','');
-  setText('add-title','Add New Debtor');
-  var sb = document.getElementById('save-btn'); if(sb){ sb.textContent='💾 Save Debtor'; sb.disabled=false; }
-  var db = document.getElementById('del-btn');  if(db) db.style.display='none';
-  var er = document.getElementById('save-err'); if(er) er.style.display='none';
-  ['f-name','f-phone','f-amount','f-notes'].forEach(function(id){ setVal(id,''); });
-  setVal('f-due', new Date().toISOString().split('T')[0]);
-  setVal('f-status','due');
+function resetAddForm() {
+  setVal("edit-id", "");
+  setTxt("add-title", "Add New Debtor");
+  var sb = gid("save-btn"); if (sb) { sb.textContent = "💾 Save Debtor"; sb.disabled = false; }
+  var db = gid("del-btn");  if (db) db.style.display = "none";
+  var er = gid("save-err"); if (er) er.style.display = "none";
+  ["f-name","f-phone","f-amount","f-notes"].forEach(function(id) { setVal(id, ""); });
+  setVal("f-due",    toDateStr(new Date()));
+  setVal("f-status", "due");
 }
 
-function cancelEdit(){ resetAddForm(); gotoPage('debtors'); }
+function cancelEdit() { resetAddForm(); gotoPage("debtors"); }
 
-function editCurrentDebtor(){
-  if(!currentDebtor) return;
-  closeOverlay('ov-detail');
+function editCurrentDebtor() {
+  if (!currentDebtor) return;
+  closeOverlay("ov-detail");
   var d = currentDebtor;
-  setVal('edit-id', d.id);
-  setText('add-title','✏️ Edit Debtor');
-  var sb = document.getElementById('save-btn'); if(sb) sb.textContent='💾 Update Debtor';
-  var db = document.getElementById('del-btn');  if(db) db.style.display='inline-flex';
-  setVal('f-name',   d.name||'');
-  setVal('f-phone',  d.phone||'');
-  setVal('f-amount', d.amount_owed||'');
-  setVal('f-due',    d.due_date||'');
-  setVal('f-status', d.status||'overdue');
-  setVal('f-notes',  d.notes||'');
-  gotoPage('add');
+  setVal("edit-id",  d.id);
+  setTxt("add-title", "Edit Debtor");
+  var sb = gid("save-btn"); if (sb) sb.textContent = "💾 Update Debtor";
+  var db = gid("del-btn");  if (db) db.style.display = "inline-flex";
+  setVal("f-name",   d.name    || "");
+  setVal("f-phone",  d.phone   || "");
+  setVal("f-amount", d.amount_owed || "");
+  setVal("f-due",    d.due_date || "");
+  setVal("f-status", d.status  || "due");
+  setVal("f-notes",  d.notes   || "");
+  gotoPage("add");
 }
 
-async function deleteDebtor(){
-  if(!confirm('Delete '+(currentDebtor?currentDebtor.name:'this debtor')+'? Cannot be undone.')) return;
-  var id = getVal('edit-id');
-  try{
+async function deleteDebtor() {
+  var id = getVal("edit-id");
+  var name = currentDebtor ? currentDebtor.name : "this debtor";
+  if (!confirm("Delete " + name + "? Cannot be undone.")) return;
+  try {
     await DEBTORS.doc(id).delete();
-    toast('Debtor deleted','ok');
+    showToast("Debtor deleted", "ok");
     resetAddForm();
     loadDashboard();
-    gotoPage('debtors');
-  }catch(e){ toast('Could not delete: '+e.message,'err'); }
+    gotoPage("debtors");
+  } catch(e) { showToast("Could not delete: " + e.message, "err"); }
 }
 
-// ── PAYMENTS PAGE ─────────────────────
-async function loadPayments(){
-  var el = document.getElementById('pay-list');
-  if(!el) return;
-  try{
-    var snap = await PAYMENTS.orderBy('payment_date','desc').get();
-    if(snap.empty){ el.innerHTML='<div class="empty-state"><div class="ei">💳</div><p class="et">No payments recorded yet.</p></div>'; return; }
-    el.innerHTML = snap.docs.map(function(d){
-      var p=d.data();
-      return '<div class="pcard">'+
-        '<div><div class="pname">'+esc(p.debtor_name||'—')+'</div>'+
-        '<div class="pmeta">'+esc(p.receipt_number||'—')+' · '+esc(p.method||'—')+(p.reference?' · '+esc(p.reference):'')+' · '+esc(p.payment_date||'')+'</div></div>'+
-        '<div class="pamt">R '+fmt(p.amount)+'</div>'+
-      '</div>';
-    }).join('');
-  }catch(e){ el.innerHTML='<div class="empty-state"><p class="et">❌ '+esc(e.message)+'</p></div>'; }
+// ─── PAYMENTS PAGE ────────────────────────────────────
+async function loadPayments() {
+  var el = gid("pay-list"); if (!el) return;
+  try {
+    var snap = await PAYMENTS.orderBy("payment_date", "desc").get();
+    if (snap.empty) { el.innerHTML = '<div class="empty-state"><div class="ei">💳</div><p class="et">No payments recorded yet.</p></div>'; return; }
+    el.innerHTML = snap.docs.map(function(d) {
+      var p = d.data();
+      return '<div class="pcard">' +
+        '<div><div class="pname">' + esc(p.debtor_name || "—") + "</div>" +
+        '<div class="pmeta">' + esc(p.receipt_number || "—") + " · " + esc(p.method || "—") + " · " + esc(p.payment_date || "") + "</div></div>" +
+        '<div class="pamt">R ' + fmt(p.amount) + "</div>" +
+      "</div>";
+    }).join("");
+  } catch(e) { el.innerHTML = '<div class="empty-state"><p class="et">❌ ' + esc(e.message) + "</p></div>"; }
 }
 
-// ── REPORTS PAGE ──────────────────────
-function rBar(label,count,total,color){
-  var pct=Math.round(count/(total||1)*100);
-  return '<div class="rrow">'+
-    '<div class="rrow-header"><span>'+esc(label)+'</span><span>'+count+' accounts ('+pct+'%)</span></div>'+
-    '<div class="rtrack"><div class="rfill" style="width:'+pct+'%;background:'+color+'"></div></div>'+
-  '</div>';
-}
-
-async function loadActivity(){
-  var el = document.getElementById('act-list');
-  if(!el) return;
-  var today      = new Date().toISOString().split('T')[0];
+// ─── REPORTS & ACTIVITY ───────────────────────────────
+async function loadActivity() {
+  var el = gid("act-content"); if (!el) return;
+  el.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading...</p></div>';
+  var today      = toDateStr(new Date());
   var startOfDay = new Date(); startOfDay.setHours(0,0,0,0);
-  try{
+  try {
+    // Load all data in parallel
     var results = await Promise.all([
-      PAYMENTS.where('payment_date','==',today).orderBy('created_at','desc').get(),
-      CALLS.where('created_at','>=',startOfDay).orderBy('created_at','desc').get(),
-      DEBTORS.where('created_at','>=',startOfDay).get()
+      fetchDebtors(),
+      PAYMENTS.get(),
+      PAYMENTS.where("payment_date", "==", today).get(),
+      BILLS.where("date", "==", today).get(),
+      CALLS.where("created_at", ">=", startOfDay).orderBy("created_at","desc").get(),
+      DEBTORS.where("created_at", ">=", startOfDay).get()
     ]);
-    var pays     = results[0].docs.map(function(d){ return merge({id:d.id},d.data()); });
-    var calls    = results[1].docs.map(function(d){ return merge({id:d.id},d.data()); });
-    var newDebs  = results[2].docs.map(function(d){ return merge({id:d.id},d.data()); });
-    var total    = pays.reduce(function(s,p){ return s+(parseFloat(p.amount)||0); },0);
+    var debtors   = results[0];
+    var allPays   = results[1];
+    var todayPays = results[2].docs.map(function(d) { return d.data(); });
+    var todayBills= results[3].docs.map(function(d) { return d.data(); });
+    var todayCalls= results[4].docs.map(function(d) { return d.data(); });
+    var newDebs   = results[5].docs.map(function(d) { return obj(d); });
 
-    // ── Reports summary section ──────────────────
-  var debtors2 = await fetchDebtors();
-  var totalPayAll=0;
-  try{ var allPs=await PAYMENTS.get(); allPs.forEach(function(d){ totalPayAll+=(parseFloat(d.data().amount)||0); }); }catch(e){}
-  var totalOwed2 = debtors2.reduce(function(s,d){ return s+(parseFloat(d.amount_owed)||0); },0);
-  var byStatus2  = {due:0,paid:0};
-  debtors2.forEach(function(d){ if(d.status==='due'||d.status==='paid') byStatus2[d.status]++; });
-  var total2 = debtors2.length||1;
+    var totalOwed    = debtors.reduce(function(s,d)  { return s + num(d.amount_owed); }, 0);
+    var totalCollAll = 0; allPays.forEach(function(d) { totalCollAll += num(d.data().amount); });
+    var todayCollected = todayPays.reduce(function(s,p) { return s + num(p.amount); }, 0);
+    var todayBilled    = todayBills.reduce(function(s,b) { return s + num(b.amount); }, 0);
+    var byStatus = {due:0, paid:0};
+    debtors.forEach(function(d) { if (d.status === "due" || d.status === "paid") byStatus[d.status]++; });
+    var total = debtors.length || 1;
 
-  var rptHtml =
-    '<div class="slabel">📊 Collection Summary</div>'+
-    '<div class="stats" style="margin-bottom:16px">'+
-      '<div class="scard gold"><div class="sc-icon">💰</div><div class="sc-val">R '+fmt(totalOwed2)+'</div><div class="sc-lbl">Total Outstanding</div></div>'+
-      '<div class="scard green"><div class="sc-icon">✅</div><div class="sc-val">R '+fmt(totalPayAll)+'</div><div class="sc-lbl">Collected All Time</div></div>'+
-      '<div class="scard gold"><div class="sc-icon">🟡</div><div class="sc-val">'+byStatus2.due+'</div><div class="sc-lbl">Due Accounts</div></div>'+
-      '<div class="scard green"><div class="sc-icon">🟢</div><div class="sc-val">'+byStatus2.paid+'</div><div class="sc-lbl">Paid Accounts</div></div>'+
-    '</div>'+
-    '<div class="rcard" style="margin-bottom:24px">'+
-      '<h2 style="font-size:18px;color:var(--ink);margin-bottom:14px">Account Status Breakdown</h2>'+
-      rBar('🟡 Due',byStatus2.due,total2,'var(--gold)')+
-      rBar('🟢 Paid',byStatus2.paid,total2,'var(--green)')+
-    '</div>'+
-    '<div class="slabel" style="margin-top:4px">📅 Today Activity</div>';
+    var html =
+      '<div class="slbl">📊 Collection Summary</div>' +
+      '<div class="stats" style="margin-bottom:16px">' +
+        '<div class="scard red"><div class="sc-icon">💰</div><div class="sc-val">R ' + fmt(totalOwed) + '</div><div class="sc-lbl">Total Outstanding</div></div>' +
+        '<div class="scard green"><div class="sc-icon">✅</div><div class="sc-val">R ' + fmt(totalCollAll) + '</div><div class="sc-lbl">Collected All Time</div></div>' +
+        '<div class="scard gold"><div class="sc-icon">🟡</div><div class="sc-val">' + byStatus.due + '</div><div class="sc-lbl">Due Accounts</div></div>' +
+        '<div class="scard teal"><div class="sc-icon">🟢</div><div class="sc-val">' + byStatus.paid + '</div><div class="sc-lbl">Paid Accounts</div></div>' +
+      '</div>' +
+      '<div class="rcard" style="margin-bottom:24px">' +
+        '<h2 style="font-size:18px;color:var(--ink);margin-bottom:14px">Account Status Breakdown</h2>' +
+        rBar("🟡 Due",  byStatus.due,  total, "var(--gold)") +
+        rBar("🟢 Paid", byStatus.paid, total, "var(--grn)") +
+      '</div>' +
+      '<div class="slbl">📅 Today Activity</div>' +
+      '<div class="stats" style="margin-bottom:20px">' +
+        '<div class="scard green"><div class="sc-icon">💰</div><div class="sc-val">R ' + fmt(todayCollected) + '</div><div class="sc-lbl">Collected Today</div></div>' +
+        '<div class="scard teal"><div class="sc-icon">💳</div><div class="sc-val">' + todayPays.length + '</div><div class="sc-lbl">Payments Today</div></div>' +
+        '<div class="scard gold"><div class="sc-icon">🧾</div><div class="sc-val">R ' + fmt(todayBilled) + '</div><div class="sc-lbl">Billed Today</div></div>' +
+        '<div class="scard"><div class="sc-icon">📞</div><div class="sc-val">' + todayCalls.length + '</div><div class="sc-lbl">Calls Today</div></div>' +
+      '</div>';
 
-  var html = rptHtml+'<div class="stats" style="margin-bottom:20px">'+
-      '<div class="scard green"><div class="sc-icon">💰</div><div class="sc-val">R '+fmt(total)+'</div><div class="sc-lbl">Collected Today</div></div>'+
-      '<div class="scard teal"><div class="sc-icon">💳</div><div class="sc-val">'+pays.length+'</div><div class="sc-lbl">Payments Today</div></div>'+
-      '<div class="scard"><div class="sc-icon">📞</div><div class="sc-val">'+calls.length+'</div><div class="sc-lbl">Calls Today</div></div>'+
-      '<div class="scard"><div class="sc-icon">👤</div><div class="sc-val">'+newDebs.length+'</div><div class="sc-lbl">New Debtors</div></div>'+
-    '</div>';
+    // Today payments
+    html += '<div class="slbl">💳 Payments Today</div>';
+    html += todayPays.length
+      ? todayPays.map(function(p) {
+          return '<div class="pcard"><div><div class="pname">' + esc(p.debtor_name||"—") + "</div>" +
+            '<div class="pmeta">' + esc(p.receipt_number||"—") + " · " + esc(p.method||"—") + "</div></div>" +
+            '<div class="pamt">R ' + fmt(p.amount) + "</div></div>";
+        }).join("")
+      : '<div class="empty-state" style="padding:18px"><p class="et">No payments today.</p></div>';
 
-    html += '<div class="slabel">💳 Payments Today</div>';
-    html += pays.length ? pays.map(function(p){
-      return '<div class="pcard"><div><div class="pname">'+esc(p.debtor_name||'—')+'</div>'+
-        '<div class="pmeta">'+esc(p.receipt_number||'—')+' · '+esc(p.method||'—')+'</div></div>'+
-        '<div class="pamt">R '+fmt(p.amount)+'</div></div>';
-    }).join('') : '<div class="empty-state" style="padding:20px"><p class="et">No payments today.</p></div>';
+    // Today calls
+    html += '<div class="slbl" style="margin-top:18px">📞 Calls Today</div>';
+    html += todayCalls.length
+      ? '<div class="dlist">' + todayCalls.map(function(c) {
+          var deb = allDebtors.find(function(d) { return d.id === c.debtor_id; });
+          return '<div class="dcard" onclick="openDebtor(\'' + (c.debtor_id||"") + '\')">' +
+            '<div class="davatar def">📞</div>' +
+            '<div class="dinfo"><div class="dname">' + esc(deb ? deb.name : "Unknown") + "</div>" +
+            '<div class="dphone">' + esc(c.outcome||"") + "</div></div>" +
+            '<div class="dchev">›</div></div>';
+        }).join("") + "</div>"
+      : '<div class="empty-state" style="padding:18px"><p class="et">No calls today.</p></div>';
 
-    html += '<div class="slabel" style="margin-top:20px">📞 Calls Today</div>';
-    html += calls.length ? '<div class="dlist">'+calls.map(function(c){
-      var deb = allDebtors.find(function(d){ return d.id===c.debtor_id; });
-      return '<div class="dcard" onclick="openDebtor(\''+c.debtor_id+'\')">'+
-        '<div class="davatar plan">📞</div>'+
-        '<div class="dinfo"><div class="dname">'+esc(deb?deb.name:'Unknown')+'</div>'+
-        '<div class="dphone">'+esc(c.outcome||'')+'</div></div>'+
-        '<div class="dchev">›</div></div>';
-    }).join('')+'</div>' : '<div class="empty-state" style="padding:20px"><p class="et">No calls logged today.</p></div>';
-
-    if(newDebs.length){
-      html += '<div class="slabel" style="margin-top:20px">👤 New Debtors Today</div>';
-      html += '<div class="dlist">'+newDebs.map(function(d){
-        return '<div class="dcard" onclick="openDebtor(\''+d.id+'\')">'+
-          '<div class="davatar '+(d.status||'default')+'">'+esc(initials(d.name))+'</div>'+
-          '<div class="dinfo"><div class="dname">'+esc(d.name||'—')+'</div></div>'+
-          '<div class="damt"><div class="damt-val '+(d.status||'')+'">R '+fmt(d.amount_owed)+'</div></div>'+
-          '<div class="dchev">›</div></div>';
-      }).join('')+'</div>';
-    }
     el.innerHTML = html;
-  }catch(e){
-    el.innerHTML='<div class="empty-state"><p class="et">❌ '+esc(e.message)+'</p></div>';
+  } catch(e) {
+    el.innerHTML = '<div class="empty-state"><p class="et">❌ ' + esc(e.message) + "</p></div>";
   }
 }
 
-// ── MONTHLY TARGET ────────────────────
-function updateTargetBar(collected){
-  var target = parseFloat(localStorage.getItem('monthly-target')||0);
-  setText('target-collected','R '+fmt(collected));
-  if(!target){
-      setText('target-pct','');
-    setText('target-remaining','');
-    var tb = document.getElementById('target-bar'); if(tb) tb.style.width='0%';
+function rBar(label, count, total, color) {
+  var pct = Math.round(count / (total || 1) * 100);
+  return '<div class="rrow">' +
+    '<div class="rrow-hdr"><span>' + esc(label) + "</span><span>" + count + " accounts (" + pct + "%)</span></div>" +
+    '<div class="rtrack"><div class="rfill" style="width:' + pct + '%;background:' + color + '"></div></div>' +
+  "</div>";
+}
+
+// ─── MONTHLY TARGET ───────────────────────────────────
+function updateTargetWidget(collected) {
+  var target = parseFloat(localStorage.getItem("monthly-target") || "0");
+  setTxt("tm-collected", "R " + fmt(collected));
+  if (!target) {
+    setTxt("tm-pct", "Not set");
+    setTxt("tm-remaining", "Tap to set");
+    var b = gid("tm-bar"); if (b) b.style.width = "0%";
     return;
   }
-  var pct = Math.min(100,Math.round(collected/target*100));
-  setText('target-pct', pct+'%');
-  setText('target-remaining', pct>=100 ? '🎉 Target reached!' : 'R '+fmt(Math.max(0,target-collected))+' to go');
-  var tb = document.getElementById('target-bar');
-  if(tb){
-    tb.style.width  = pct+'%';
-    tb.style.background = pct>=100?'var(--green)':pct>=60?'var(--teal)':'var(--gold)';
+  var pct = Math.min(100, Math.round(collected / target * 100));
+  setTxt("tm-pct", pct + "%");
+  setTxt("tm-remaining", pct >= 100 ? "Target reached!" : "R " + fmt(Math.max(0, target - collected)) + " left");
+  var b = gid("tm-bar");
+  if (b) {
+    b.style.width      = pct + "%";
+    b.style.background = pct >= 100 ? "var(--grn)" : pct >= 60 ? "var(--teal)" : "var(--gold)";
   }
 }
 
-function saveTarget(){
-  var val = parseFloat(getVal('tgt-inp'));
-  if(!val){ toast('Please enter a target amount','err'); return; }
-  localStorage.setItem('monthly-target', String(val));
-  closeOverlay('ov-target');
+function saveTarget() {
+  var val = parseFloat(getVal("tgt-inp"));
+  if (!val) { showToast("Please enter a target amount", "err"); return; }
+  localStorage.setItem("monthly-target", String(val));
+  closeOverlay("ov-target");
   loadDashboard();
-  toast('Target saved!','ok');
+  showToast("Target saved!", "ok");
 }
 
-// ── PRINT RECEIPT ─────────────────────
-function printReceipt(p){
-  var now     = new Date();
-  var printed = now.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
-  setText('r-num',     p.receipt_number||'—');
-  setText('r-date',    p.date||'—');
-  setText('r-name',    p.name||'—');
-  setText('r-phone',   p.phone||'—');
-  setText('r-amt',     'R '+fmt(p.amount));
-  setText('r-method',  p.method||'—');
-  setText('r-ref',     p.ref||'—');
-  setText('r-bal',     'R '+fmt(p.balance));
-  setText('r-printed', printed);
-  var el = document.getElementById('receipt-el');
-  if(!el) return;
-  el.style.display='block';
-  setTimeout(function(){ window.print(); el.style.display='none'; },200);
+// ─── PRINT RECEIPT ────────────────────────────────────
+function printReceipt(p) {
+  var printed = new Date().toLocaleDateString("en-IN", {day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});
+  setTxt("r-num",     p.receipt_number || "—");
+  setTxt("r-date",    p.date || "—");
+  setTxt("r-name",    p.name || "—");
+  setTxt("r-phone",   p.phone || "—");
+  setTxt("r-amt",     "R " + fmt(p.amount));
+  setTxt("r-method",  p.method || "—");
+  setTxt("r-ref",     p.ref || "—");
+  setTxt("r-bal",     "R " + fmt(p.balance));
+  setTxt("r-printed", printed);
+  var el = gid("prt-receipt");
+  if (!el) return;
+  el.style.display = "block";
+  setTimeout(function() { window.print(); el.style.display = "none"; }, 200);
 }
 
-// ── STATEMENT OF ACCOUNT ──────────────
-async function printStatement(){
-  var d = currentDebtor;
-  if(!d){ toast('No debtor selected','err'); return; }
-  closeOverlay('ov-detail');
-
-  var statusLabel={overdue:'Overdue',pending:'Pending',plan:'Payment Plan',paid:'Paid'};
-  setText('stmt-date',   'Generated: '+new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}));
-  setText('stmt-name',   d.name||'—');
-  setText('stmt-phone',  d.phone||'—');
-  setText('stmt-status', statusLabel[d.status]||d.status||'—');
-  setText('stmt-bal',    'R '+fmt(d.amount_owed));
-  setText('stmt-due',    d.due_date||'—');
-
-  var body='';
-  try{
-    var results = await Promise.all([
-      BILLS.where('debtor_id','==',d.id).orderBy('date','asc').get(),
-      PAYMENTS.where('debtor_id','==',d.id).orderBy('payment_date','asc').get(),
-      CALLS.where('debtor_id','==',d.id).orderBy('created_at','desc').get()
+// ─── PRINT STATEMENT ──────────────────────────────────
+async function printStatement() {
+  var d = currentDebtor; if (!d) { showToast("No debtor selected", "err"); return; }
+  closeOverlay("ov-detail");
+  var statusLabel = {due:"Due", paid:"Paid"};
+  setTxt("stmt-date",   "Generated: " + new Date().toLocaleDateString("en-IN", {day:"numeric",month:"long",year:"numeric"}));
+  setTxt("stmt-name",   d.name   || "—");
+  setTxt("stmt-phone",  d.phone  || "—");
+  setTxt("stmt-status", statusLabel[d.status] || d.status || "—");
+  setTxt("stmt-bal",    "R " + fmt(d.amount_owed));
+  setTxt("stmt-due",    d.due_date || "—");
+  var body = "";
+  try {
+    var r = await Promise.all([
+      BILLS.where("debtor_id", "==", d.id).orderBy("date", "asc").get(),
+      PAYMENTS.where("debtor_id", "==", d.id).orderBy("payment_date", "asc").get(),
+      CALLS.where("debtor_id", "==", d.id).orderBy("created_at", "desc").get()
     ]);
-    var bSnap=results[0], pSnap=results[1], cSnap=results[2];
+    var allBills = r[0].docs; var allPays = r[1].docs; var allCalls = r[2].docs;
+    var totalB = 0; allBills.forEach(function(x) { totalB += num(x.data().amount); });
+    var totalP = 0; allPays.forEach(function(x)  { totalP += num(x.data().amount); });
+    var last10B = allBills.slice(-10);
+    var last10P = allPays.slice(-10);
 
-    // Bills table — show ALL, last 10 highlighted
-    var allBillDocs = bSnap.docs;
-    var totalB = 0;
-    allBillDocs.forEach(function(doc){ totalB+=(parseFloat(doc.data().amount)||0); });
-    var last10Bills = allBillDocs.slice(-10);
-    var hiddenBills = allBillDocs.length - last10Bills.length;
-    body+='<b style="font-size:14px">Credit Purchases — Last '+Math.min(10,allBillDocs.length)+' of '+allBillDocs.length+'</b>';
-    if(hiddenBills>0) body+=' <span style="font-size:11px;color:#888">('+hiddenBills+' earlier entries not shown)</span>';
-    body+='<br>';
-    if(!allBillDocs.length){ body+='<p style="font-size:12px;color:#555">No bills recorded.</p>'; }
-    else{
-      body+='<table style="width:100%;font-size:12px;border-collapse:collapse;margin-top:4px">'+
-        '<thead><tr style="border-bottom:1px solid #000"><th style="text-align:left">Date</th><th style="text-align:left">Bill No.</th><th style="text-align:left">Description</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
-        last10Bills.map(function(doc){
-          var b=doc.data();
-          return '<tr><td>'+esc(b.date||'—')+'</td><td><b>'+esc(b.bill_number||'—')+'</b></td><td>'+esc(b.description||'—')+'</td><td style="text-align:right">R '+fmt(b.amount)+'</td></tr>';
-        }).join('')+
-        '</tbody><tfoot><tr style="border-top:1px solid #000"><td colspan="3"><b>Total Billed (All Time)</b></td><td style="text-align:right"><b>R '+fmt(totalB)+'</b></td></tr></tfoot></table>';
-    }
+    body += "<b>Credit Purchases — Last " + Math.min(10, allBills.length) + " of " + allBills.length + "</b><br>";
+    body += allBills.length
+      ? '<table class="prt-tbl" style="margin-top:4px"><thead><tr><th>Date</th><th>Bill No.</th><th>Description</th><th class="tr">Amount</th></tr></thead><tbody>' +
+        last10B.map(function(x) { var b=x.data(); return "<tr><td>" + esc(b.date||"—") + "</td><td><b>" + esc(b.bill_number||"—") + "</b></td><td>" + esc(b.description||"—") + '</td><td class="tr">R ' + fmt(b.amount) + "</td></tr>"; }).join("") +
+        '<tr style="border-top:1px solid #000"><td colspan="3"><b>Total Billed (All Time)</b></td><td class="tr"><b>R ' + fmt(totalB) + "</b></td></tr></tbody></table>"
+      : '<p style="font-size:12px;color:#555">No bills recorded.</p>';
 
-    // Payments table — show ALL, last 10 highlighted
-    var allPayDocs = pSnap.docs;
-    var totalP = 0;
-    allPayDocs.forEach(function(doc){ totalP+=(parseFloat(doc.data().amount)||0); });
-    var last10Pays = allPayDocs.slice(-10);
-    var hiddenPays = allPayDocs.length - last10Pays.length;
-    body+='<br><b style="font-size:14px">Payments Received — Last '+Math.min(10,allPayDocs.length)+' of '+allPayDocs.length+'</b>';
-    if(hiddenPays>0) body+=' <span style="font-size:11px;color:#888">('+hiddenPays+' earlier entries not shown)</span>';
-    body+='<br>';
-    if(!allPayDocs.length){ body+='<p style="font-size:12px;color:#555">No payments recorded.</p>'; }
-    else{
-      body+='<table style="width:100%;font-size:12px;border-collapse:collapse;margin-top:4px">'+
-        '<thead><tr style="border-bottom:1px solid #000"><th style="text-align:left">Date</th><th style="text-align:left">Receipt No.</th><th style="text-align:left">Method</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
-        last10Pays.map(function(doc){
-          var p=doc.data();
-          return '<tr><td>'+esc(p.payment_date||'—')+'</td><td><b>'+esc(p.receipt_number||p.reference||'—')+'</b></td><td>'+esc(p.method||'—')+'</td><td style="text-align:right;color:green">R '+fmt(p.amount)+'</td></tr>';
-        }).join('')+
-        '</tbody><tfoot><tr style="border-top:2px solid #000"><td colspan="2"><b>Total Paid: R '+fmt(totalP)+'</b></td><td style="text-align:right"><b>Balance Due</b></td><td style="text-align:right;color:red"><b>R '+fmt(Math.max(0,totalB-totalP))+'</b></td></tr></tfoot></table>';
-    }
+    body += "<br><b>Payments Received — Last " + Math.min(10, allPays.length) + " of " + allPays.length + "</b><br>";
+    body += allPays.length
+      ? '<table class="prt-tbl" style="margin-top:4px"><thead><tr><th>Date</th><th>Receipt No.</th><th>Method</th><th class="tr">Amount</th></tr></thead><tbody>' +
+        last10P.map(function(x) { var p=x.data(); return "<tr><td>" + esc(p.payment_date||"—") + "</td><td><b>" + esc(p.receipt_number||"—") + "</b></td><td>" + esc(p.method||"—") + '</td><td class="tr" style="color:green">R ' + fmt(p.amount) + "</td></tr>"; }).join("") +
+        '<tr style="border-top:2px solid #000"><td colspan="2"><b>Total Paid: R ' + fmt(totalP) + "</b></td>" +
+        '<td><b>Balance Due</b></td><td class="tr" style="color:red"><b>R ' + fmt(Math.max(0, totalB - totalP)) + "</b></td></tr></tbody></table>"
+      : '<p style="font-size:12px;color:#555">No payments recorded.</p>';
 
-    // Calls table
-    body+='<br><b style="font-size:14px">Call History</b><br>';
-    if(cSnap.empty){ body+='<p style="font-size:12px;color:#555">No calls recorded.</p>'; }
-    else{
-      body+='<table style="width:100%;font-size:12px;border-collapse:collapse;margin-top:4px">'+
-        '<thead><tr style="border-bottom:1px solid #000"><th style="text-align:left">Date</th><th style="text-align:left">Outcome</th><th style="text-align:left">Notes</th></tr></thead><tbody>'+
-        cSnap.docs.map(function(doc){
-          var c=doc.data();
-          var dt=c.created_at&&c.created_at.toDate?c.created_at.toDate().toLocaleDateString('en-IN'):'—';
-          return '<tr><td>'+esc(dt)+'</td><td>'+esc(c.outcome||'—')+'</td><td>'+esc(c.notes||'—')+'</td></tr>';
-        }).join('')+
-        '</tbody></table>';
-    }
-  }catch(e){ body='<p>Could not load data: '+esc(e.message)+'</p>'; }
-
-  var bodyEl = document.getElementById('stmt-body');
-  if(bodyEl) bodyEl.innerHTML=body;
-  var stmtEl = document.getElementById('stmt-el');
-  if(stmtEl){ stmtEl.style.display='block'; setTimeout(function(){ window.print(); stmtEl.style.display='none'; },300); }
+    body += "<br><b>Call History</b><br>";
+    body += allCalls.length
+      ? '<table class="prt-tbl" style="margin-top:4px"><thead><tr><th>Date</th><th>Outcome</th><th>Notes</th></tr></thead><tbody>' +
+        allCalls.map(function(x) {
+          var c=x.data();
+          var dt = c.created_at && c.created_at.toDate ? c.created_at.toDate().toLocaleDateString("en-IN") : "—";
+          return "<tr><td>" + esc(dt) + "</td><td>" + esc(c.outcome||"—") + "</td><td>" + esc(c.notes||"—") + "</td></tr>";
+        }).join("") + "</tbody></table>"
+      : '<p style="font-size:12px;color:#555">No calls recorded.</p>';
+  } catch(e) { body = "<p>Could not load data: " + esc(e.message) + "</p>"; }
+  var bodyEl = gid("stmt-body"); if (bodyEl) bodyEl.innerHTML = body;
+  var el = gid("prt-stmt");
+  if (el) { el.style.display = "block"; setTimeout(function() { window.print(); el.style.display = "none"; }, 300); }
 }
 
-// ── DAILY REPORT ──────────────────────
-async function printDailyReport(){
-  var today      = new Date().toISOString().split('T')[0];
-  var startOfDay = new Date(); startOfDay.setHours(0,0,0,0);
-  var ds = new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  setText('rpt-date-lbl', ds);
-  try{
-    var results = await Promise.all([
-      PAYMENTS.where('payment_date','==',today).get(),
-      CALLS.where('created_at','>=',startOfDay).get(),
-      DEBTORS.where('created_at','>=',startOfDay).get()
-    ]);
-    var pays=results[0].docs.map(function(d){ return d.data(); });
-    var calls=results[1].docs.map(function(d){ return d.data(); });
-    var newD=results[2].docs.map(function(d){ return d.data(); });
-    var total=pays.reduce(function(s,p){ return s+(parseFloat(p.amount)||0); },0);
+// ─── PRINT TODAY BILLS ────────────────────────────────
+async function printDailyBills() {
+  var today = toDateStr(new Date());
+  var ds    = new Date().toLocaleDateString("en-IN", {weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  setTxt("bills-date", ds);
+  try {
+    var snap  = await BILLS.where("date", "==", today).get();
+    var bills = snap.docs.map(function(d) { return d.data(); });
+    var total = bills.reduce(function(s,b) { return s + num(b.amount); }, 0);
+    setTxt("bills-count", String(bills.length));
+    setTxt("bills-total", "R " + fmt(total));
+    var body = bills.length
+      ? '<table class="prt-tbl"><thead><tr><th>Debtor</th><th>Bill No.</th><th>Description</th><th class="tr">Amount</th></tr></thead><tbody>' +
+        bills.map(function(b) {
+          var d = allDebtors.find(function(x) { return x.id === b.debtor_id; });
+          return "<tr><td><b>" + esc(d ? d.name : "—") + "</b><br>" +
+            '<span style="font-size:10px;color:#666">' + esc(d && d.phone ? d.phone : "") + "</span></td>" +
+            "<td>" + esc(b.bill_number||"—") + "</td><td>" + esc(b.description||"—") + '</td><td class="tr">R ' + fmt(b.amount) + "</td></tr>";
+        }).join("") +
+        '<tr style="border-top:2px solid #000"><td colspan="3"><b>Total</b></td><td class="tr"><b>R ' + fmt(total) + "</b></td></tr></tbody></table>"
+      : '<p style="font-size:12px;color:#555">No bills recorded today.</p>';
+    var bodyEl = gid("bills-body"); if (bodyEl) bodyEl.innerHTML = body;
+    var el = gid("prt-bills");
+    if (el) { el.style.display = "block"; setTimeout(function() { window.print(); el.style.display = "none"; }, 300); }
+  } catch(e) { showToast("Error: " + e.message, "err"); }
+}
 
-    setText('rpt-total',  'R '+fmt(total));
-    setText('rpt-npay',   String(pays.length));
-    setText('rpt-ncall',  String(calls.length));
-    setText('rpt-nnew',   String(newD.length));
-
-    var body='<b style="font-size:13px">Payments Today</b><br>';
-    body += pays.length
-      ? '<table style="width:100%;font-size:12px;border-collapse:collapse;margin-top:4px">'+
-          '<thead><tr style="border-bottom:1px solid #000"><th style="text-align:left">Debtor</th><th style="text-align:left">Receipt</th><th style="text-align:left">Method</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
-          pays.map(function(p){ return '<tr><td>'+esc(p.debtor_name||'—')+'</td><td>'+esc(p.receipt_number||'—')+'</td><td>'+esc(p.method||'—')+'</td><td style="text-align:right">R '+fmt(p.amount)+'</td></tr>'; }).join('')+
-          '<tr style="border-top:1px solid #000"><td colspan="3"><b>Total</b></td><td style="text-align:right"><b>R '+fmt(total)+'</b></td></tr></tbody></table>'
+// ─── PRINT TODAY PAYMENTS ─────────────────────────────
+async function printDailyPayments() {
+  var today = toDateStr(new Date());
+  var ds    = new Date().toLocaleDateString("en-IN", {weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  setTxt("pays-date", ds);
+  try {
+    var snap = await PAYMENTS.where("payment_date", "==", today).get();
+    var pays = snap.docs.map(function(d) { return d.data(); });
+    var total = pays.reduce(function(s,p) { return s + num(p.amount); }, 0);
+    setTxt("pays-count", String(pays.length));
+    setTxt("pays-total", "R " + fmt(total));
+    var body = pays.length
+      ? '<table class="prt-tbl"><thead><tr><th>Debtor</th><th>Receipt No.</th><th>Method</th><th class="tr">Amount</th></tr></thead><tbody>' +
+        pays.map(function(p) {
+          return "<tr><td><b>" + esc(p.debtor_name||"—") + "</b></td>" +
+            "<td>" + esc(p.receipt_number||"—") + "</td><td>" + esc(p.method||"—") + '</td><td class="tr" style="color:green">R ' + fmt(p.amount) + "</td></tr>";
+        }).join("") +
+        '<tr style="border-top:2px solid #000"><td colspan="3"><b>Total Collected</b></td><td class="tr" style="color:green"><b>R ' + fmt(total) + "</b></td></tr></tbody></table>"
       : '<p style="font-size:12px;color:#555">No payments today.</p>';
-
-    body += '<br><b style="font-size:13px">Calls Today</b><br>';
-    body += calls.length
-      ? '<table style="width:100%;font-size:12px;border-collapse:collapse;margin-top:4px">'+
-          '<thead><tr style="border-bottom:1px solid #000"><th style="text-align:left">Outcome</th><th style="text-align:left">Notes</th></tr></thead><tbody>'+
-          calls.map(function(c){ return '<tr><td>'+esc(c.outcome||'—')+'</td><td>'+esc(c.notes||'—')+'</td></tr>'; }).join('')+
-          '</tbody></table>'
-      : '<p style="font-size:12px;color:#555">No calls today.</p>';
-
-    var bodyEl = document.getElementById('rpt-body');
-    if(bodyEl) bodyEl.innerHTML=body;
-    var rptEl = document.getElementById('rpt-el');
-    if(rptEl){ rptEl.style.display='block'; setTimeout(function(){ window.print(); rptEl.style.display='none'; },300); }
-  }catch(e){ toast('Could not generate report: '+e.message,'err'); }
+    var bodyEl = gid("pays-body"); if (bodyEl) bodyEl.innerHTML = body;
+    var el = gid("prt-pays");
+    if (el) { el.style.display = "block"; setTimeout(function() { window.print(); el.style.display = "none"; }, 300); }
+  } catch(e) { showToast("Error: " + e.message, "err"); }
 }
 
-// ── UTILITIES ─────────────────────────
-function fmt(n){
-  return parseFloat(n||0).toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:0});
-}
-function esc(s){
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function initials(name){
-  return (name||'??').split(' ').map(function(w){ return w[0]||''; }).join('').substring(0,2).toUpperCase();
-}
-function daysLabel(dateStr){
-  var diff=Math.round((new Date()-new Date(dateStr+'T00:00:00'))/86400000);
-  if(diff>0)  return diff+' days overdue';
-  if(diff===0)return 'Due today';
-  return 'Due in '+Math.abs(diff)+' days';
-}
-function fmtDate(dateStr){
-  try{ return new Date(dateStr+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}); }
-  catch(e){ return dateStr; }
-}
-function getText(id){ var el=document.getElementById(id); return el?el.textContent:''; }
-function setText(id,val){ var el=document.getElementById(id); if(el) el.textContent=val; }
-function getVal(id){ var el=document.getElementById(id); return el?(el.value||''):''; }
-function setVal(id,val){ var el=document.getElementById(id); if(el) el.value=val; }
-function merge(a,b){ var r={}; for(var k in a) r[k]=a[k]; for(var k in b) r[k]=b[k]; return r; }
-function show(id,cls){ var el=document.getElementById(id); if(el) el.className=cls; }
+// ─── UTILITIES ────────────────────────────────────────
+function fmt(n) { return parseFloat(n||0).toLocaleString("en-IN", {minimumFractionDigits:0, maximumFractionDigits:0}); }
+function num(n) { return parseFloat(n||0) || 0; }
+function esc(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function initials(name) { return (name||"??").split(" ").map(function(w) { return w[0]||""; }).join("").substring(0,2).toUpperCase(); }
+function toDateStr(d) { return d.toISOString().split("T")[0]; }
+function fmtDate(s) { try { return new Date(s+"T00:00:00").toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}); } catch(e) { return s; } }
+function daysLabel(s) { var diff=Math.round((new Date()-new Date(s+"T00:00:00"))/86400000); return diff>0?diff+" days overdue":diff===0?"Due today":"Due in "+Math.abs(diff)+" days"; }
+function gid(id)     { return document.getElementById(id); }
+function setTxt(id,v){ var el=gid(id); if(el) el.textContent=v; }
+function getVal(id)  { var el=gid(id); return el?(el.value||""):""; }
+function setVal(id,v){ var el=gid(id); if(el) el.value=v; }
+function obj(doc, extra) { var d={id:doc.id}; var data=doc.data(); for(var k in data) d[k]=data[k]; for(var k in (extra||{})) d[k]=extra[k]; return d; }
 
 var _toastTimer = null;
-function toast(msg, type){
-  var el = document.getElementById('toast-el');
-  if(!el) return;
-  el.textContent = (type==='ok'?'✅ ':type==='err'?'❌ ':'') + msg;
-  el.className = 'toast show' + (type?' '+type:'');
+function showToast(msg, type) {
+  var el = gid("toast-el"); if (!el) return;
+  el.textContent = (type==="ok"?"✅ ":type==="err"?"❌ ":"") + msg;
+  el.className = "toast show" + (type ? " " + type : "");
   clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 3200);
+  _toastTimer = setTimeout(function() { el.classList.remove("show"); }, 3400);
 }
-
-// ── FULL SCREEN LEDGER ────────────────────────────────
-function openFullLedger(){
-  if(!currentDebtor){ toast('No debtor selected','err'); return; }
-  closeOverlay('ov-detail');
-  setText('ledger-page-title', currentDebtor.name+' — Ledger');
-  setText('ledger-page-sub', '📞 '+(currentDebtor.phone||'No phone')+' · Due: '+(currentDebtor.due_date||'—'));
-  var dn=document.getElementById('dn-ledger'); if(dn) dn.style.display='';
-  var bt=document.getElementById('bt-ledger'); if(bt) bt.style.display='';
-  gotoPage('ledger');
-  loadFullLedgerPage();
-}
-
-async function loadFullLedgerPage(){
-  var d=currentDebtor; if(!d) return;
-  var bodyEl=document.getElementById('ledger-page-body');
-  if(bodyEl) bodyEl.innerHTML='<div class="loading"><div class="spinner"></div><p>Loading...</p></div>';
-  try{
-    var results=await Promise.all([
-      BILLS.where('debtor_id','==',d.id).orderBy('date','asc').get(),
-      PAYMENTS.where('debtor_id','==',d.id).orderBy('payment_date','asc').get()
-    ]);
-    var bills=results[0].docs.map(function(x){ return merge({id:x.id,kind:'bill'},x.data()); });
-    var pays =results[1].docs.map(function(x){ return merge({id:x.id,kind:'pay'},x.data()); });
-    var initAmt=parseFloat(d.initial_amount||0)||parseFloat(d.amount_owed)||0;
-    if(initAmt>0){
-      bills.unshift({id:'__init__',kind:'bill',date:d.due_date||'',bill_number:'INITIAL',amount:initAmt,description:'Opening Balance',isInitial:true});
-    }
-    var totalBilled=bills.reduce(function(s,b){ return s+(parseFloat(b.amount)||0); },0);
-    var totalPaid  =pays.reduce(function(s,p){  return s+(parseFloat(p.amount)||0); },0);
-    var balance=Math.max(0,totalBilled-totalPaid);
-    var all=bills.concat(pays).sort(function(a,b){
-      var da=a.kind==='bill'?a.date:a.payment_date;
-      var db=b.kind==='bill'?b.date:b.payment_date;
-      return da>db?1:da<db?-1:0;
-    });
-    setText('lp-billed','R '+fmt(totalBilled));
-    setText('lp-paid',  'R '+fmt(totalPaid));
-    setText('lp-balance','R '+fmt(balance));
-    setText('lp-txns',  String(all.length));
-    if(!all.length){
-      if(bodyEl) bodyEl.innerHTML='<div class="empty-state"><div class="ei">📒</div><p class="et">No transactions yet.</p></div>';
-      return;
-    }
-    var running=0;
-    var rows=all.map(function(t){
-      var isBill=t.kind==='bill';
-      var date=isBill?t.date:t.payment_date;
-      var ref=isBill?(t.bill_number||'—'):(t.receipt_number||t.reference||'—');
-      var desc=isBill?(t.description||'Credit Purchase'):(t.method||'Payment');
-      var amt=parseFloat(t.amount)||0;
-      running+=isBill?amt:-amt; running=Math.max(0,running);
-      var delFn=t.isInitial?'':(isBill?'delBill(''+t.id+'')':'delPayment(''+t.id+'')');
-      return '<tr class="'+(isBill?'bill-row':'pay-row')+'">'+
-        '<td style="font-size:13px;color:var(--muted);white-space:nowrap">'+esc(date||'—')+'</td>'+
-        '<td><span class="ltype '+(isBill?'bill':'pay')+'">'+(isBill?'Bill':'Pay')+'</span></td>'+
-        '<td><span class="lref">'+esc(ref)+'</span></td>'+
-        '<td style="font-size:13px">'+esc(desc)+'</td>'+
-        '<td style="'+(isBill?'color:var(--red)':'color:var(--green)')+';font-weight:800;text-align:right">'+(isBill?'+ ':'- ')+'R '+fmt(amt)+'</td>'+
-        '<td class="lbal '+(running===0?'clear':'owe')+'">R '+fmt(running)+'</td>'+
-        '<td>'+(delFn?'<button class="ldel" onclick="'+delFn+'">x</button>':'')+'</td>'+
-      '</tr>';
-    }).join('');
-    if(bodyEl) bodyEl.innerHTML=
-      '<table class="ltable"><thead><tr>'+
-      '<th>Date</th><th>Type</th><th>Ref</th><th>Description</th>'+
-      '<th style="text-align:right">Amount</th><th style="text-align:right">Balance</th><th></th>'+
-      '</tr></thead><tbody>'+rows+'</tbody></table>';
-  }catch(e){
-    if(bodyEl) bodyEl.innerHTML='<div class="empty-state"><p class="et">Error: '+esc(e.message)+'</p></div>';
-  }
-}
-
-function openAddBillFromPage(){
-  if(!currentDebtor){ toast('No debtor selected','err'); return; }
-  setText('bill-for','Adding to: '+currentDebtor.name);
-  setVal('b-num',''); setVal('b-date',new Date().toISOString().split('T')[0]);
-  setVal('b-amt',''); setVal('b-desc','');
-  openOverlay('ov-bill');
-}
-
-function openRecordPaymentFromPage(){
-  if(!currentDebtor){ toast('No debtor selected','err'); return; }
-  setText('pay-for','Payment from: '+currentDebtor.name);
-  setVal('p-amt',''); setVal('p-ref','');
-  setVal('p-date',new Date().toISOString().split('T')[0]);
-  openOverlay('ov-payment');
-}
-
-async function printDailyBills(){
-  var today=new Date().toISOString().split('T')[0];
-  var ds=new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  setText('bills-rpt-date',ds);
-  try{
-    var snap=await BILLS.where('date','==',today).get();
-    var bills=snap.docs.map(function(d){ return d.data(); });
-    var total=bills.reduce(function(s,b){ return s+(parseFloat(b.amount)||0); },0);
-    setText('bills-rpt-count',String(bills.length));
-    setText('bills-rpt-total','R '+fmt(total));
-    var body=bills.length
-      ?'<table style="width:100%;font-size:12px;border-collapse:collapse">'+
-        '<thead><tr style="border-bottom:1px solid #000"><th style="text-align:left">Debtor</th>'+
-        '<th style="text-align:left">Bill No.</th><th style="text-align:left">Description</th>'+
-        '<th style="text-align:right">Amount</th></tr></thead><tbody>'+
-        bills.map(function(b){
-          var d=allDebtors.find(function(x){ return x.id===b.debtor_id; });
-          return '<tr><td><b>'+esc(d?d.name:'—')+'</b><br><span style="font-size:11px;color:#666">'+esc(d&&d.phone?d.phone:'')+'</span></td>'+
-            '<td>'+esc(b.bill_number||'—')+'</td><td>'+esc(b.description||'—')+'</td>'+
-            '<td style="text-align:right">R '+fmt(b.amount)+'</td></tr>';
-        }).join('')+
-        '<tr style="border-top:2px solid #000"><td colspan="3"><b>Total</b></td>'+
-        '<td style="text-align:right"><b>R '+fmt(total)+'</b></td></tr></tbody></table>'
-      :'<p style="font-size:12px;color:#555">No bills recorded today.</p>';
-    var bodyEl=document.getElementById('bills-rpt-body');
-    if(bodyEl) bodyEl.innerHTML=body;
-    var el=document.getElementById('bills-rpt-el');
-    if(el){ el.style.display='block'; setTimeout(function(){ window.print(); el.style.display='none'; },300); }
-  }catch(e){ toast('Error: '+e.message,'err'); }
-}
-
-async function printDailyPayments(){
-  var today=new Date().toISOString().split('T')[0];
-  var ds=new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  setText('pays-rpt-date',ds);
-  try{
-    var snap=await PAYMENTS.where('payment_date','==',today).get();
-    var pays=snap.docs.map(function(d){ return d.data(); });
-    var total=pays.reduce(function(s,p){ return s+(parseFloat(p.amount)||0); },0);
-    setText('pays-rpt-count',String(pays.length));
-    setText('pays-rpt-total','R '+fmt(total));
-    var body=pays.length
-      ?'<table style="width:100%;font-size:12px;border-collapse:collapse">'+
-        '<thead><tr style="border-bottom:1px solid #000"><th style="text-align:left">Debtor</th>'+
-        '<th style="text-align:left">Receipt No.</th><th style="text-align:left">Method</th>'+
-        '<th style="text-align:right">Amount</th></tr></thead><tbody>'+
-        pays.map(function(p){
-          return '<tr><td><b>'+esc(p.debtor_name||'—')+'</b></td>'+
-            '<td>'+esc(p.receipt_number||'—')+'</td><td>'+esc(p.method||'—')+'</td>'+
-            '<td style="text-align:right;color:green">R '+fmt(p.amount)+'</td></tr>';
-        }).join('')+
-        '<tr style="border-top:2px solid #000"><td colspan="3"><b>Total Collected</b></td>'+
-        '<td style="text-align:right;color:green"><b>R '+fmt(total)+'</b></td></tr></tbody></table>'
-      :'<p style="font-size:12px;color:#555">No payments today.</p>';
-    var bodyEl=document.getElementById('pays-rpt-body');
-    if(bodyEl) bodyEl.innerHTML=body;
-    var el=document.getElementById('pays-rpt-el');
-    if(el){ el.style.display='block'; setTimeout(function(){ window.print(); el.style.display='none'; },300); }
-  }catch(e){ toast('Error: '+e.message,'err'); }
-}
-
 </script>
 </body>
 </html>
