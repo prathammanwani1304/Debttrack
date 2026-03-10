@@ -479,6 +479,10 @@ a{text-decoration:none}
    PRINT
 ══════════════════════════════════════ */
 @media print{
+  #bills-rpt-el,#bills-rpt-el *,
+  #pays-rpt-el,#pays-rpt-el *{ visibility:visible!important }
+  #bills-rpt-el,#pays-rpt-el{ position:fixed!important;top:0;left:0;width:100%;margin:0;padding:18px }
+
   body *{visibility:hidden!important}
   #receipt-el,#receipt-el *,
   #stmt-el,#stmt-el *,
@@ -540,6 +544,7 @@ a{text-decoration:none}
   <button class="dnav-btn" id="dn-add"        onclick="gotoPage('add')">       <span class="di">➕</span> Add Debtor</button>
   <button class="dnav-btn" id="dn-payments"   onclick="gotoPage('payments')">  <span class="di">💳</span> Payments</button>
   <button class="dnav-btn" id="dn-activity"   onclick="gotoPage('activity')">  <span class="di">📋</span> Reports & Activity</button>
+  <button class="dnav-btn" id="dn-ledger" onclick="gotoPage('ledger')" style="display:none"><span class="di">📒</span> Ledger</button>
 </nav>
 
 <!-- ══════════ PAGES ══════════ -->
@@ -571,6 +576,36 @@ a{text-decoration:none}
       <button class="btn btn-ink" onclick="gotoPage('add')">➕ Add New</button>
     </div>
     <div class="dlist" id="all-list"><div class="loading"><div class="spinner"></div><p>Loading...</p></div></div>
+  </div>
+
+  <!-- LEDGER PAGE (full screen) -->
+  <div class="page" id="pg-ledger">
+    <div class="ph">
+      <div>
+        <h1 class="ph-title" id="ledger-page-title">Account Ledger</h1>
+        <div class="ph-sub" id="ledger-page-sub">Full transaction history</div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-gold" onclick="openAddBillFromPage()">＋ Add Bill</button>
+        <button class="btn btn-ink" onclick="openRecordPaymentFromPage()">💳 Payment</button>
+        <button class="btn btn-ghost" onclick="gotoPage('debtors')">← Back</button>
+      </div>
+    </div>
+    <!-- Summary -->
+    <div class="stats" style="margin-bottom:20px">
+      <div class="scard red">  <div class="sc-icon">🧾</div><div class="sc-val" id="lp-billed">₹0</div><div class="sc-lbl">Total Billed</div></div>
+      <div class="scard green"><div class="sc-icon">💳</div><div class="sc-val" id="lp-paid">₹0</div><div class="sc-lbl">Total Paid</div></div>
+      <div class="scard gold"> <div class="sc-icon">⚖️</div><div class="sc-val" id="lp-balance">₹0</div><div class="sc-lbl">Balance Due</div></div>
+      <div class="scard">      <div class="sc-icon">📋</div><div class="sc-val" id="lp-txns">0</div><div class="sc-lbl">Transactions</div></div>
+    </div>
+    <!-- Full ledger table -->
+    <div style="background:var(--surface);border:2px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh1)">
+      <div style="overflow-x:auto">
+        <div id="ledger-page-body">
+          <div class="loading"><div class="spinner"></div><p>Loading...</p></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ADD / EDIT DEBTOR -->
@@ -628,7 +663,10 @@ a{text-decoration:none}
   <div class="page" id="pg-activity">
     <div class="ph">
       <div><h1 class="ph-title">Reports & Activity 📋</h1><div class="ph-sub">Collection summary and today's activity</div></div>
-      <button class="btn btn-ink" onclick="printDailyReport()">🖨️ Print Daily Report</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ink" onclick="printDailyBills()">🧾 Print Today's Bills</button>
+        <button class="btn btn-gold" onclick="printDailyPayments()">💳 Print Today's Payments</button>
+      </div>
     </div>
     <div id="act-list"><div class="loading"><div class="spinner"></div><p>Loading...</p></div></div>
   </div>
@@ -680,7 +718,8 @@ a{text-decoration:none}
     <div class="mactions">
       <button class="btn btn-teal btn-lg"  onclick="openLogCall()">📞 Log a Call</button>
       <button class="btn btn-ink btn-lg"   onclick="openRecordPayment()">💳 Record a Payment</button>
-      <button class="btn btn-gold btn-lg"  onclick="printStatement()">📄 Statement of Account</button>
+      <button class="btn btn-gold btn-lg"  onclick="openFullLedger()">📒 Open Full Ledger</button>
+      <button class="btn btn-ghost btn-lg" onclick="printStatement()">📄 Statement</button>
       <button class="btn btn-ghost btn-lg" onclick="editCurrentDebtor()">✏️ Edit Details</button>
       <button class="btn btn-ghost btn-lg" onclick="closeOverlay('ov-detail')">Close</button>
     </div>
@@ -816,6 +855,42 @@ a{text-decoration:none}
 </div>
 
 <!-- HIDDEN PRINT AREAS -->
+<!-- DAILY BILLS PRINT -->
+<div id="bills-rpt-el" style="display:none;font-family:'Courier New',monospace;padding:20px;color:#000;background:#fff">
+  <div style="text-align:center;margin-bottom:12px">
+    <div style="font-size:20px;font-weight:bold">MANWANI TRADERS</div>
+    <div style="font-size:15px;font-weight:bold;margin-top:3px">DAILY BILLS REPORT</div>
+    <div style="font-size:12px;color:#555;margin-top:3px" id="bills-rpt-date">—</div>
+  </div>
+  <hr style="border:1px solid #000;margin:8px 0">
+  <table style="width:100%;font-size:12px;margin-bottom:8px">
+    <tr><td><b>Total Bills Today:</b></td><td id="bills-rpt-count">—</td></tr>
+    <tr><td><b>Total Amount Billed:</b></td><td id="bills-rpt-total" style="font-weight:bold;font-size:15px">—</td></tr>
+  </table>
+  <hr style="border:1px solid #000;margin:8px 0">
+  <div id="bills-rpt-body"></div>
+  <hr style="border:1px solid #000;margin:12px 0">
+  <div style="text-align:center;font-size:11px;color:#555">End of Bills Report — Manwani Traders</div>
+</div>
+
+<!-- DAILY PAYMENTS PRINT -->
+<div id="pays-rpt-el" style="display:none;font-family:'Courier New',monospace;padding:20px;color:#000;background:#fff">
+  <div style="text-align:center;margin-bottom:12px">
+    <div style="font-size:20px;font-weight:bold">MANWANI TRADERS</div>
+    <div style="font-size:15px;font-weight:bold;margin-top:3px">DAILY PAYMENTS REPORT</div>
+    <div style="font-size:12px;color:#555;margin-top:3px" id="pays-rpt-date">—</div>
+  </div>
+  <hr style="border:1px solid #000;margin:8px 0">
+  <table style="width:100%;font-size:12px;margin-bottom:8px">
+    <tr><td><b>Total Payments Today:</b></td><td id="pays-rpt-count">—</td></tr>
+    <tr><td><b>Total Amount Collected:</b></td><td id="pays-rpt-total" style="font-weight:bold;font-size:15px;color:green">—</td></tr>
+  </table>
+  <hr style="border:1px solid #000;margin:8px 0">
+  <div id="pays-rpt-body"></div>
+  <hr style="border:1px solid #000;margin:12px 0">
+  <div style="text-align:center;font-size:11px;color:#555">End of Payments Report — Manwani Traders</div>
+</div>
+
 <div id="receipt-el">
   <div class="rc rb" style="font-size:15px">MANWANI TRADERS</div>
   <div class="rc" style="font-size:11px">Payment Receipt</div>
@@ -891,6 +966,7 @@ a{text-decoration:none}
   <button class="btab" id="bt-add"        onclick="gotoPage('add')">       <span class="bi">➕</span>Add</button>
   <button class="btab" id="bt-payments"   onclick="gotoPage('payments')">  <span class="bi">💳</span>Payments</button>
   <button class="btab" id="bt-activity"   onclick="gotoPage('activity')">  <span class="bi">📋</span>Reports</button>
+  <button class="btab" id="bt-ledger" onclick="gotoPage('ledger')" style="display:none"><span class="bi">📒</span>Ledger</button>
 </nav>
 
 <!-- INSTALL BANNER -->
@@ -1251,7 +1327,8 @@ async function saveBill(){
     toast('Bill added!','ok');
     closeOverlay('ov-bill');
     loadDashboard();
-    openDebtor(currentDebtor.id);
+    if(currentPage==='ledger'){ loadFullLedgerPage(); }
+    else { openDebtor(currentDebtor.id); }
   }catch(e){ toast('Could not save bill: '+e.message,'err'); }
 }
 
@@ -1266,7 +1343,8 @@ async function delBill(billId){
     currentDebtor.amount_owed = newAmt;
     toast('Bill deleted','ok');
     loadDashboard();
-    openDebtor(currentDebtor.id);
+    if(currentPage==='ledger'){ loadFullLedgerPage(); }
+    else { openDebtor(currentDebtor.id); }
   }catch(e){ toast('Could not delete: '+e.message,'err'); }
 }
 
@@ -1341,6 +1419,7 @@ async function savePayment(){
 
     toast('Payment saved!','ok');
     closeOverlay('ov-payment');
+    if(currentPage==='ledger'){ loadFullLedgerPage(); }
 
     // Print receipt
     printReceipt({
@@ -1370,7 +1449,8 @@ async function delPayment(payId){
     currentDebtor.amount_owed = newAmt;
     toast('Payment deleted','ok');
     loadDashboard();
-    openDebtor(currentDebtor.id);
+    if(currentPage==='ledger'){ loadFullLedgerPage(); }
+    else { openDebtor(currentDebtor.id); }
   }catch(e){ toast('Could not delete: '+e.message,'err'); }
 }
 
@@ -1505,6 +1585,14 @@ async function loadPayments(){
 }
 
 // ── REPORTS PAGE ──────────────────────
+function rBar(label,count,total,color){
+  var pct=Math.round(count/(total||1)*100);
+  return '<div class="rrow">'+
+    '<div class="rrow-header"><span>'+esc(label)+'</span><span>'+count+' accounts ('+pct+'%)</span></div>'+
+    '<div class="rtrack"><div class="rfill" style="width:'+pct+'%;background:'+color+'"></div></div>'+
+  '</div>';
+}
+
 async function loadActivity(){
   var el = document.getElementById('act-list');
   if(!el) return;
@@ -1656,32 +1744,44 @@ async function printStatement(){
     ]);
     var bSnap=results[0], pSnap=results[1], cSnap=results[2];
 
-    // Bills table
-    var totalB=0;
-    body+='<b style="font-size:14px">Credit Purchases (Bills)</b><br>';
-    if(bSnap.empty){ body+='<p style="font-size:12px;color:#555">No bills recorded.</p>'; }
+    // Bills table — show ALL, last 10 highlighted
+    var allBillDocs = bSnap.docs;
+    var totalB = 0;
+    allBillDocs.forEach(function(doc){ totalB+=(parseFloat(doc.data().amount)||0); });
+    var last10Bills = allBillDocs.slice(-10);
+    var hiddenBills = allBillDocs.length - last10Bills.length;
+    body+='<b style="font-size:14px">Credit Purchases — Last '+Math.min(10,allBillDocs.length)+' of '+allBillDocs.length+'</b>';
+    if(hiddenBills>0) body+=' <span style="font-size:11px;color:#888">('+hiddenBills+' earlier entries not shown)</span>';
+    body+='<br>';
+    if(!allBillDocs.length){ body+='<p style="font-size:12px;color:#555">No bills recorded.</p>'; }
     else{
       body+='<table style="width:100%;font-size:12px;border-collapse:collapse;margin-top:4px">'+
         '<thead><tr style="border-bottom:1px solid #000"><th style="text-align:left">Date</th><th style="text-align:left">Bill No.</th><th style="text-align:left">Description</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
-        bSnap.docs.map(function(doc){
-          var b=doc.data(); totalB+=(parseFloat(b.amount)||0);
+        last10Bills.map(function(doc){
+          var b=doc.data();
           return '<tr><td>'+esc(b.date||'—')+'</td><td><b>'+esc(b.bill_number||'—')+'</b></td><td>'+esc(b.description||'—')+'</td><td style="text-align:right">R '+fmt(b.amount)+'</td></tr>';
         }).join('')+
-        '</tbody><tfoot><tr style="border-top:1px solid #000"><td colspan="3"><b>Total Billed</b></td><td style="text-align:right"><b>R '+fmt(totalB)+'</b></td></tr></tfoot></table>';
+        '</tbody><tfoot><tr style="border-top:1px solid #000"><td colspan="3"><b>Total Billed (All Time)</b></td><td style="text-align:right"><b>R '+fmt(totalB)+'</b></td></tr></tfoot></table>';
     }
 
-    // Payments table
-    var totalP=0;
-    body+='<br><b style="font-size:14px">Payments Received</b><br>';
-    if(pSnap.empty){ body+='<p style="font-size:12px;color:#555">No payments recorded.</p>'; }
+    // Payments table — show ALL, last 10 highlighted
+    var allPayDocs = pSnap.docs;
+    var totalP = 0;
+    allPayDocs.forEach(function(doc){ totalP+=(parseFloat(doc.data().amount)||0); });
+    var last10Pays = allPayDocs.slice(-10);
+    var hiddenPays = allPayDocs.length - last10Pays.length;
+    body+='<br><b style="font-size:14px">Payments Received — Last '+Math.min(10,allPayDocs.length)+' of '+allPayDocs.length+'</b>';
+    if(hiddenPays>0) body+=' <span style="font-size:11px;color:#888">('+hiddenPays+' earlier entries not shown)</span>';
+    body+='<br>';
+    if(!allPayDocs.length){ body+='<p style="font-size:12px;color:#555">No payments recorded.</p>'; }
     else{
       body+='<table style="width:100%;font-size:12px;border-collapse:collapse;margin-top:4px">'+
         '<thead><tr style="border-bottom:1px solid #000"><th style="text-align:left">Date</th><th style="text-align:left">Receipt No.</th><th style="text-align:left">Method</th><th style="text-align:right">Amount</th></tr></thead><tbody>'+
-        pSnap.docs.map(function(doc){
-          var p=doc.data(); totalP+=(parseFloat(p.amount)||0);
+        last10Pays.map(function(doc){
+          var p=doc.data();
           return '<tr><td>'+esc(p.payment_date||'—')+'</td><td><b>'+esc(p.receipt_number||p.reference||'—')+'</b></td><td>'+esc(p.method||'—')+'</td><td style="text-align:right;color:green">R '+fmt(p.amount)+'</td></tr>';
         }).join('')+
-        '</tbody><tfoot><tr style="border-top:2px solid #000"><td colspan="3"><b>Balance Due</b></td><td style="text-align:right;color:red"><b>R '+fmt(Math.max(0,totalB-totalP))+'</b></td></tr></tfoot></table>';
+        '</tbody><tfoot><tr style="border-top:2px solid #000"><td colspan="2"><b>Total Paid: R '+fmt(totalP)+'</b></td><td style="text-align:right"><b>Balance Due</b></td><td style="text-align:right;color:red"><b>R '+fmt(Math.max(0,totalB-totalP))+'</b></td></tr></tfoot></table>';
     }
 
     // Calls table
@@ -1786,6 +1886,156 @@ function toast(msg, type){
   clearTimeout(_toastTimer);
   _toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 3200);
 }
+
+// ── FULL SCREEN LEDGER ────────────────────────────────
+function openFullLedger(){
+  if(!currentDebtor){ toast('No debtor selected','err'); return; }
+  closeOverlay('ov-detail');
+  setText('ledger-page-title', currentDebtor.name+' — Ledger');
+  setText('ledger-page-sub', '📞 '+(currentDebtor.phone||'No phone')+' · Due: '+(currentDebtor.due_date||'—'));
+  var dn=document.getElementById('dn-ledger'); if(dn) dn.style.display='';
+  var bt=document.getElementById('bt-ledger'); if(bt) bt.style.display='';
+  gotoPage('ledger');
+  loadFullLedgerPage();
+}
+
+async function loadFullLedgerPage(){
+  var d=currentDebtor; if(!d) return;
+  var bodyEl=document.getElementById('ledger-page-body');
+  if(bodyEl) bodyEl.innerHTML='<div class="loading"><div class="spinner"></div><p>Loading...</p></div>';
+  try{
+    var results=await Promise.all([
+      BILLS.where('debtor_id','==',d.id).orderBy('date','asc').get(),
+      PAYMENTS.where('debtor_id','==',d.id).orderBy('payment_date','asc').get()
+    ]);
+    var bills=results[0].docs.map(function(x){ return merge({id:x.id,kind:'bill'},x.data()); });
+    var pays =results[1].docs.map(function(x){ return merge({id:x.id,kind:'pay'},x.data()); });
+    var initAmt=parseFloat(d.initial_amount||0)||parseFloat(d.amount_owed)||0;
+    if(initAmt>0){
+      bills.unshift({id:'__init__',kind:'bill',date:d.due_date||'',bill_number:'INITIAL',amount:initAmt,description:'Opening Balance',isInitial:true});
+    }
+    var totalBilled=bills.reduce(function(s,b){ return s+(parseFloat(b.amount)||0); },0);
+    var totalPaid  =pays.reduce(function(s,p){  return s+(parseFloat(p.amount)||0); },0);
+    var balance=Math.max(0,totalBilled-totalPaid);
+    var all=bills.concat(pays).sort(function(a,b){
+      var da=a.kind==='bill'?a.date:a.payment_date;
+      var db=b.kind==='bill'?b.date:b.payment_date;
+      return da>db?1:da<db?-1:0;
+    });
+    setText('lp-billed','R '+fmt(totalBilled));
+    setText('lp-paid',  'R '+fmt(totalPaid));
+    setText('lp-balance','R '+fmt(balance));
+    setText('lp-txns',  String(all.length));
+    if(!all.length){
+      if(bodyEl) bodyEl.innerHTML='<div class="empty-state"><div class="ei">📒</div><p class="et">No transactions yet.</p></div>';
+      return;
+    }
+    var running=0;
+    var rows=all.map(function(t){
+      var isBill=t.kind==='bill';
+      var date=isBill?t.date:t.payment_date;
+      var ref=isBill?(t.bill_number||'—'):(t.receipt_number||t.reference||'—');
+      var desc=isBill?(t.description||'Credit Purchase'):(t.method||'Payment');
+      var amt=parseFloat(t.amount)||0;
+      running+=isBill?amt:-amt; running=Math.max(0,running);
+      var delFn=t.isInitial?'':(isBill?'delBill(''+t.id+'')':'delPayment(''+t.id+'')');
+      return '<tr class="'+(isBill?'bill-row':'pay-row')+'">'+
+        '<td style="font-size:13px;color:var(--muted);white-space:nowrap">'+esc(date||'—')+'</td>'+
+        '<td><span class="ltype '+(isBill?'bill':'pay')+'">'+(isBill?'Bill':'Pay')+'</span></td>'+
+        '<td><span class="lref">'+esc(ref)+'</span></td>'+
+        '<td style="font-size:13px">'+esc(desc)+'</td>'+
+        '<td style="'+(isBill?'color:var(--red)':'color:var(--green)')+';font-weight:800;text-align:right">'+(isBill?'+ ':'- ')+'R '+fmt(amt)+'</td>'+
+        '<td class="lbal '+(running===0?'clear':'owe')+'">R '+fmt(running)+'</td>'+
+        '<td>'+(delFn?'<button class="ldel" onclick="'+delFn+'">x</button>':'')+'</td>'+
+      '</tr>';
+    }).join('');
+    if(bodyEl) bodyEl.innerHTML=
+      '<table class="ltable"><thead><tr>'+
+      '<th>Date</th><th>Type</th><th>Ref</th><th>Description</th>'+
+      '<th style="text-align:right">Amount</th><th style="text-align:right">Balance</th><th></th>'+
+      '</tr></thead><tbody>'+rows+'</tbody></table>';
+  }catch(e){
+    if(bodyEl) bodyEl.innerHTML='<div class="empty-state"><p class="et">Error: '+esc(e.message)+'</p></div>';
+  }
+}
+
+function openAddBillFromPage(){
+  if(!currentDebtor){ toast('No debtor selected','err'); return; }
+  setText('bill-for','Adding to: '+currentDebtor.name);
+  setVal('b-num',''); setVal('b-date',new Date().toISOString().split('T')[0]);
+  setVal('b-amt',''); setVal('b-desc','');
+  openOverlay('ov-bill');
+}
+
+function openRecordPaymentFromPage(){
+  if(!currentDebtor){ toast('No debtor selected','err'); return; }
+  setText('pay-for','Payment from: '+currentDebtor.name);
+  setVal('p-amt',''); setVal('p-ref','');
+  setVal('p-date',new Date().toISOString().split('T')[0]);
+  openOverlay('ov-payment');
+}
+
+async function printDailyBills(){
+  var today=new Date().toISOString().split('T')[0];
+  var ds=new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  setText('bills-rpt-date',ds);
+  try{
+    var snap=await BILLS.where('date','==',today).get();
+    var bills=snap.docs.map(function(d){ return d.data(); });
+    var total=bills.reduce(function(s,b){ return s+(parseFloat(b.amount)||0); },0);
+    setText('bills-rpt-count',String(bills.length));
+    setText('bills-rpt-total','R '+fmt(total));
+    var body=bills.length
+      ?'<table style="width:100%;font-size:12px;border-collapse:collapse">'+
+        '<thead><tr style="border-bottom:1px solid #000"><th style="text-align:left">Debtor</th>'+
+        '<th style="text-align:left">Bill No.</th><th style="text-align:left">Description</th>'+
+        '<th style="text-align:right">Amount</th></tr></thead><tbody>'+
+        bills.map(function(b){
+          var d=allDebtors.find(function(x){ return x.id===b.debtor_id; });
+          return '<tr><td><b>'+esc(d?d.name:'—')+'</b><br><span style="font-size:11px;color:#666">'+esc(d&&d.phone?d.phone:'')+'</span></td>'+
+            '<td>'+esc(b.bill_number||'—')+'</td><td>'+esc(b.description||'—')+'</td>'+
+            '<td style="text-align:right">R '+fmt(b.amount)+'</td></tr>';
+        }).join('')+
+        '<tr style="border-top:2px solid #000"><td colspan="3"><b>Total</b></td>'+
+        '<td style="text-align:right"><b>R '+fmt(total)+'</b></td></tr></tbody></table>'
+      :'<p style="font-size:12px;color:#555">No bills recorded today.</p>';
+    var bodyEl=document.getElementById('bills-rpt-body');
+    if(bodyEl) bodyEl.innerHTML=body;
+    var el=document.getElementById('bills-rpt-el');
+    if(el){ el.style.display='block'; setTimeout(function(){ window.print(); el.style.display='none'; },300); }
+  }catch(e){ toast('Error: '+e.message,'err'); }
+}
+
+async function printDailyPayments(){
+  var today=new Date().toISOString().split('T')[0];
+  var ds=new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  setText('pays-rpt-date',ds);
+  try{
+    var snap=await PAYMENTS.where('payment_date','==',today).get();
+    var pays=snap.docs.map(function(d){ return d.data(); });
+    var total=pays.reduce(function(s,p){ return s+(parseFloat(p.amount)||0); },0);
+    setText('pays-rpt-count',String(pays.length));
+    setText('pays-rpt-total','R '+fmt(total));
+    var body=pays.length
+      ?'<table style="width:100%;font-size:12px;border-collapse:collapse">'+
+        '<thead><tr style="border-bottom:1px solid #000"><th style="text-align:left">Debtor</th>'+
+        '<th style="text-align:left">Receipt No.</th><th style="text-align:left">Method</th>'+
+        '<th style="text-align:right">Amount</th></tr></thead><tbody>'+
+        pays.map(function(p){
+          return '<tr><td><b>'+esc(p.debtor_name||'—')+'</b></td>'+
+            '<td>'+esc(p.receipt_number||'—')+'</td><td>'+esc(p.method||'—')+'</td>'+
+            '<td style="text-align:right;color:green">R '+fmt(p.amount)+'</td></tr>';
+        }).join('')+
+        '<tr style="border-top:2px solid #000"><td colspan="3"><b>Total Collected</b></td>'+
+        '<td style="text-align:right;color:green"><b>R '+fmt(total)+'</b></td></tr></tbody></table>'
+      :'<p style="font-size:12px;color:#555">No payments today.</p>';
+    var bodyEl=document.getElementById('pays-rpt-body');
+    if(bodyEl) bodyEl.innerHTML=body;
+    var el=document.getElementById('pays-rpt-el');
+    if(el){ el.style.display='block'; setTimeout(function(){ window.print(); el.style.display='none'; },300); }
+  }catch(e){ toast('Error: '+e.message,'err'); }
+}
+
 </script>
 </body>
 </html>
