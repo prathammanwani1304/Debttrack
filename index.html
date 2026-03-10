@@ -66,6 +66,27 @@ input,select,textarea{font-family:'Nunito',sans-serif}
 a{text-decoration:none}
 
 /* ══════════════════════════════════════
+   TARGET MINI WIDGET
+══════════════════════════════════════ */
+.target-mini{
+  position:fixed;top:78px;right:14px;z-index:85;
+  background:var(--surface);border:2px solid var(--border);
+  border-radius:14px;padding:10px 14px;box-shadow:var(--sh2);
+  min-width:180px;max-width:220px;cursor:pointer;
+  transition:transform .15s;
+}
+.target-mini:hover{transform:scale(1.02)}
+.tm-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.tm-title{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+.tm-pct{font-size:13px;font-weight:800;color:var(--teal)}
+.tm-track{height:8px;background:var(--border);border-radius:99px;overflow:hidden;margin-bottom:5px}
+.tm-fill{height:100%;border-radius:99px;transition:width .5s ease;background:var(--teal)}
+.tm-vals{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-weight:600}
+@media(max-width:600px){
+  .target-mini{top:auto;bottom:calc(70px + env(safe-area-inset-bottom) + 8px);right:10px;min-width:160px;font-size:11px}
+}
+
+/* ══════════════════════════════════════
    TOPBAR
 ══════════════════════════════════════ */
 .topbar{
@@ -188,11 +209,12 @@ a{text-decoration:none}
   font-family:'Lora',serif;font-size:18px;font-weight:700;color:#fff;
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
 }
-.davatar.overdue{background:var(--red)}
-.davatar.pending{background:var(--gold)}
-.davatar.plan   {background:var(--teal)}
-.davatar.paid   {background:var(--green)}
-.davatar.default{background:var(--ink2)}
+.davatar.due{background:var(--gold)}
+
+
+.davatar.paid{background:var(--green)}
+.davatar.default,.davatar.due{background:var(--gold)}
+.davatar.paid{background:var(--green)}
 .dinfo{flex:1;min-width:0}
 .dname{font-size:18px;font-weight:800;color:var(--ink)}
 .dphone{font-size:14px;color:var(--muted);margin-top:2px}
@@ -200,16 +222,16 @@ a{text-decoration:none}
   display:inline-block;padding:3px 10px;border-radius:99px;
   font-size:12px;font-weight:800;margin-top:5px;
 }
-.dpill.overdue{background:var(--red-bg);color:var(--red)}
-.dpill.pending{background:var(--gold-bg);color:var(--gold)}
-.dpill.plan   {background:var(--teal-bg);color:var(--teal)}
-.dpill.paid   {background:var(--grn-bg);color:var(--green)}
+.dpill.due{background:var(--gold-bg);color:var(--gold)}
+
+
+.dpill.paid{background:var(--grn-bg);color:var(--green)}
 .damt{text-align:right;flex-shrink:0}
 .damt-val{font-family:'Lora',serif;font-size:22px;font-weight:700}
-.damt-val.overdue{color:var(--red)}
-.damt-val.pending{color:var(--gold)}
-.damt-val.plan   {color:var(--teal)}
-.damt-val.paid   {color:var(--green)}
+.damt-val.due{color:var(--gold)}
+
+
+.damt-val.paid{color:var(--green)}
 .damt-days{font-size:12px;color:var(--muted);margin-top:3px}
 .dchev{color:var(--border);font-size:24px;flex-shrink:0;margin-left:4px}
 
@@ -278,7 +300,7 @@ a{text-decoration:none}
 .d-header-info{flex:1}
 .d-header-amt{text-align:right}
 .d-header-amt .big{font-family:'Lora',serif;font-size:30px;font-weight:700}
-.d-header-amt .big.overdue{color:var(--red)}
+.d-header-amt .big.due{color:var(--gold)}
 .d-header-amt .big.pending{color:var(--gold)}
 .d-header-amt .big.plan{color:var(--teal)}
 .d-header-amt .big.paid{color:var(--green)}
@@ -370,13 +392,13 @@ a{text-decoration:none}
   transition:border-color .15s,box-shadow .15s;
 }
 .fu-card:hover{box-shadow:var(--sh2)}
-.fu-card.overdue{border-color:var(--red-br)}
+
 .fu-card.today  {border-color:#99d6cf}
 .fu-info{flex:1}
 .fu-name{font-size:17px;font-weight:800;color:var(--ink)}
 .fu-outcome{font-size:14px;color:var(--muted);margin-top:2px}
 .fu-date{font-size:14px;font-weight:800;white-space:nowrap;text-align:right}
-.fu-date.overdue{color:var(--red)}
+
 .fu-date.today  {color:var(--teal)}
 .fu-date.upcoming{color:var(--muted)}
 
@@ -517,9 +539,7 @@ a{text-decoration:none}
   <button class="dnav-btn" id="dn-debtors"   onclick="gotoPage('debtors')">  <span class="di">👥</span> All Debtors <span class="nbadge" id="badge">0</span></button>
   <button class="dnav-btn" id="dn-add"        onclick="gotoPage('add')">       <span class="di">➕</span> Add Debtor</button>
   <button class="dnav-btn" id="dn-payments"   onclick="gotoPage('payments')">  <span class="di">💳</span> Payments</button>
-  <button class="dnav-btn" id="dn-reports"    onclick="gotoPage('reports')">   <span class="di">📊</span> Reports</button>
-  <button class="dnav-btn" id="dn-followups"  onclick="gotoPage('followups')"> <span class="di">📅</span> Follow-Ups</button>
-  <button class="dnav-btn" id="dn-activity"   onclick="gotoPage('activity')">  <span class="di">📋</span> Activity</button>
+  <button class="dnav-btn" id="dn-activity"   onclick="gotoPage('activity')">  <span class="di">📋</span> Reports & Activity</button>
 </nav>
 
 <!-- ══════════ PAGES ══════════ -->
@@ -531,27 +551,12 @@ a{text-decoration:none}
       <div><h1 class="ph-title">Good day 👋</h1><div class="ph-sub" id="dash-datestr"></div></div>
     </div>
     <div class="stats">
-      <div class="scard red">  <div class="sc-icon">⏰</div><div class="sc-val" id="ds-overdue">—</div><div class="sc-lbl">Overdue Accounts</div></div>
+      <div class="scard red">  <div class="sc-icon">⏰</div><div class="sc-val" id="ds-due">—</div><div class="sc-lbl">Due Accounts</div></div>
       <div class="scard gold"> <div class="sc-icon">💰</div><div class="sc-val" id="ds-outstanding">—</div><div class="sc-lbl">Total Outstanding</div></div>
       <div class="scard green"><div class="sc-icon">✅</div><div class="sc-val" id="ds-collected">—</div><div class="sc-lbl">Collected This Month</div></div>
       <div class="scard teal"> <div class="sc-icon">👥</div><div class="sc-val" id="ds-total">—</div><div class="sc-lbl">Total Debtors</div></div>
     </div>
-    <!-- Monthly target -->
-    <div class="rcard" style="margin-bottom:24px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-        <h3 style="font-size:18px;color:var(--ink)">🎯 Monthly Collection Target</h3>
-        <button class="btn btn-ghost btn-sm" onclick="openOverlay('ov-target')">Set Target</button>
-      </div>
-      <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700;margin-bottom:7px">
-        <span id="target-lbl">Target: not set</span>
-        <span id="target-pct" style="color:var(--teal)"></span>
-      </div>
-      <div class="rtrack" style="height:16px"><div class="rfill" id="target-bar" style="width:0%;background:var(--teal)"></div></div>
-      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-top:6px">
-        <span>Collected: <strong id="target-collected">R 0</strong></span>
-        <span id="target-remaining"></span>
-      </div>
-    </div>
+
     <div class="slabel">⚠️ Needs Attention</div>
     <div class="dlist" id="dash-list"><div class="loading"><div class="spinner"></div><p>Loading...</p></div></div>
   </div>
@@ -594,21 +599,13 @@ a{text-decoration:none}
           <input class="finput" id="f-due" type="date">
         </div>
       </div>
-      <div class="frow">
-        <div class="fgroup">
-          <label class="flabel">ID / Aadhar Number</label>
-          <input class="finput" id="f-idnum" type="text" placeholder="ID or Aadhar" inputmode="numeric">
-        </div>
-        <div class="fgroup">
+      <div class="fgroup">
           <label class="flabel">Status</label>
           <select class="fselect" id="f-status">
-            <option value="overdue">🔴 Overdue</option>
-            <option value="pending">🟡 Pending</option>
-            <option value="plan">🔵 Payment Plan</option>
+            <option value="due">🟡 Due</option>
             <option value="paid">🟢 Paid</option>
           </select>
         </div>
-      </div>
       <div class="fgroup">
         <label class="flabel">Notes</label>
         <textarea class="ftextarea" id="f-notes" placeholder="Any extra information..."></textarea>
@@ -627,22 +624,10 @@ a{text-decoration:none}
     <div id="pay-list"><div class="loading"><div class="spinner"></div><p>Loading...</p></div></div>
   </div>
 
-  <!-- REPORTS PAGE -->
-  <div class="page" id="pg-reports">
-    <div class="ph"><div><h1 class="ph-title">Reports</h1><div class="ph-sub">Collection performance overview</div></div></div>
-    <div id="rpt-content"><div class="loading"><div class="spinner"></div><p>Building report...</p></div></div>
-  </div>
-
-  <!-- FOLLOW-UPS PAGE -->
-  <div class="page" id="pg-followups">
-    <div class="ph"><div><h1 class="ph-title">Follow-Ups 📅</h1><div class="ph-sub">Scheduled callbacks sorted by urgency</div></div></div>
-    <div id="fu-list"><div class="loading"><div class="spinner"></div><p>Loading...</p></div></div>
-  </div>
-
   <!-- ACTIVITY LOG PAGE -->
   <div class="page" id="pg-activity">
     <div class="ph">
-      <div><h1 class="ph-title">Activity Log 📋</h1><div class="ph-sub">Everything that happened today</div></div>
+      <div><h1 class="ph-title">Reports & Activity 📋</h1><div class="ph-sub">Collection summary and today's activity</div></div>
       <button class="btn btn-ink" onclick="printDailyReport()">🖨️ Print Daily Report</button>
     </div>
     <div id="act-list"><div class="loading"><div class="spinner"></div><p>Loading...</p></div></div>
@@ -665,14 +650,13 @@ a{text-decoration:none}
         <div style="color:var(--muted);font-size:14px;margin-top:2px" id="det-phone">—</div>
       </div>
       <div class="d-header-amt">
-        <div class="big overdue" id="det-amt">—</div>
+        <div class="big due" id="det-amt">—</div>
         <div style="font-size:12px;color:var(--muted);margin-top:2px">Outstanding</div>
       </div>
     </div>
     <div class="infogrid">
       <div class="iblock"><div class="ikey">📋 Status</div><div class="ival" id="det-status">—</div></div>
       <div class="iblock"><div class="ikey">📅 Due Date</div><div class="ival" id="det-due">—</div></div>
-      <div class="iblock"><div class="ikey">🪪 ID Number</div><div class="ival" id="det-idnum">—</div></div>
       <div class="iblock"><div class="ikey">📝 Notes</div><div class="ival" id="det-notes" style="font-size:15px;font-weight:600">—</div></div>
     </div>
     <!-- Ledger -->
@@ -778,20 +762,15 @@ a{text-decoration:none}
     <div class="msub" id="pay-for">Recording payment</div>
     <div class="frow">
       <div class="fgroup">
-        <label class="flabel">Receipt Number <span class="req">*</span></label>
-        <input class="finput" id="p-receipt" type="text" placeholder="e.g. RCP-001" style="font-size:19px;font-weight:700">
-      </div>
-      <div class="fgroup">
         <label class="flabel">Amount Paid (₹) <span class="req">*</span></label>
         <input class="finput" id="p-amt" type="number" placeholder="e.g. 2500" inputmode="decimal">
       </div>
-    </div>
-    <div class="frow">
       <div class="fgroup">
         <label class="flabel">Payment Date <span class="req">*</span></label>
         <input class="finput" id="p-date" type="date">
       </div>
-      <div class="fgroup">
+    </div>
+    <div class="fgroup">
         <label class="flabel">Payment Method</label>
         <select class="fselect" id="p-method">
           <option>Cash</option>
@@ -800,7 +779,6 @@ a{text-decoration:none}
           <option>Cheque</option>
           <option>Card Payment</option>
         </select>
-      </div>
     </div>
     <div class="fgroup">
       <label class="flabel">Bank Reference / Notes</label>
@@ -809,9 +787,8 @@ a{text-decoration:none}
     <div class="fgroup">
       <label class="flabel">Update debtor status to:</label>
       <select class="fselect" id="p-status">
-        <option value="plan">🔵 Still on Payment Plan (owes more)</option>
+        <option value="due">🟡 Still Owes More — keep as Due</option>
         <option value="paid">🟢 Fully Paid — close account</option>
-        <option value="pending">🟡 Pending</option>
       </select>
     </div>
     <div class="factions">
@@ -867,7 +844,7 @@ a{text-decoration:none}
   <hr style="border:1px solid #000;margin:10px 0">
   <table style="width:100%;font-size:13px;margin-bottom:10px">
     <tr><td><b>Debtor:</b></td><td id="stmt-name">—</td><td><b>Phone:</b></td><td id="stmt-phone">—</td></tr>
-    <tr><td><b>ID Number:</b></td><td id="stmt-idnum">—</td><td><b>Status:</b></td><td id="stmt-status">—</td></tr>
+    <tr><td><b>Status:</b></td><td id="stmt-status">—</td></tr>
     <tr><td><b>Balance Due:</b></td><td id="stmt-bal" style="font-weight:bold;color:red">—</td><td><b>Due Date:</b></td><td id="stmt-due">—</td></tr>
   </table>
   <hr style="border:1px solid #000;margin:10px 0">
@@ -894,15 +871,26 @@ a{text-decoration:none}
   <div style="text-align:center;font-size:11px;color:#555">End of Daily Report — Manwani Traders</div>
 </div>
 
+<!-- TARGET MINI WIDGET -->
+<div class="target-mini" id="target-mini" onclick="openOverlay('ov-target')">
+  <div class="tm-header">
+    <span class="tm-title">🎯 Monthly Target</span>
+    <span class="tm-pct" id="target-pct">—</span>
+  </div>
+  <div class="tm-track"><div class="tm-fill" id="target-bar"></div></div>
+  <div class="tm-vals">
+    <span>Collected: <strong id="target-collected">R 0</strong></span>
+    <span id="target-remaining"></span>
+  </div>
+</div>
+
 <!-- BOTTOM TABS -->
 <nav class="btabs" id="btabs">
   <button class="btab active" id="bt-dashboard" onclick="gotoPage('dashboard')"><span class="bi">🏠</span>Home</button>
   <button class="btab" id="bt-debtors"   onclick="gotoPage('debtors')">  <span class="bi">👥</span>Debtors</button>
   <button class="btab" id="bt-add"        onclick="gotoPage('add')">       <span class="bi">➕</span>Add</button>
   <button class="btab" id="bt-payments"   onclick="gotoPage('payments')">  <span class="bi">💳</span>Payments</button>
-  <button class="btab" id="bt-reports"    onclick="gotoPage('reports')">   <span class="bi">📊</span>Reports</button>
-  <button class="btab" id="bt-followups"  onclick="gotoPage('followups')"> <span class="bi">📅</span>Follow</button>
-  <button class="btab" id="bt-activity"   onclick="gotoPage('activity')">  <span class="bi">📋</span>Activity</button>
+  <button class="btab" id="bt-activity"   onclick="gotoPage('activity')">  <span class="bi">📋</span>Reports</button>
 </nav>
 
 <!-- INSTALL BANNER -->
@@ -973,7 +961,6 @@ function gotoPage(name){
   if(name==='add' && !getVal('edit-id')) resetAddForm();
   if(name==='debtors')  loadAllDebtors();
   if(name==='payments') loadPayments();
-  if(name==='reports')  loadReports();
   if(name==='followups')loadFollowups();
   if(name==='activity') loadActivity();
   window.scrollTo(0,0);
@@ -1008,7 +995,7 @@ async function fetchDebtors(){
 // ── DASHBOARD ─────────────────────────
 async function loadDashboard(){
   allDebtors = await fetchDebtors();
-  var overdue     = allDebtors.filter(function(d){ return d.status==='overdue'; }).length;
+  var overdue     = allDebtors.filter(function(d){ return d.status==='due'; }).length;
   var outstanding = allDebtors.reduce(function(s,d){ return s+(parseFloat(d.amount_owed)||0); },0);
 
   var monthStart = new Date(); monthStart.setDate(1);
@@ -1019,7 +1006,7 @@ async function loadDashboard(){
     ps.forEach(function(d){ collected+=(parseFloat(d.data().amount)||0); });
   }catch(e){}
 
-  setText('ds-overdue',     String(overdue));
+  setText('ds-due',     String(overdue));
   setText('ds-outstanding', 'R '+fmt(outstanding));
   setText('ds-collected',   'R '+fmt(collected));
   setText('ds-total',       String(allDebtors.length));
@@ -1027,7 +1014,7 @@ async function loadDashboard(){
 
   updateTargetBar(collected);
 
-  var urgent = allDebtors.filter(function(d){ return d.status==='overdue'||d.status==='pending'; }).slice(0,6);
+  var urgent = allDebtors.filter(function(d){ return d.status==='due'; }).slice(0,6);
   renderDebtorList('dash-list', urgent, '🎉 No urgent accounts right now!');
 }
 
@@ -1051,7 +1038,7 @@ function renderDebtorList(containerId, list, emptyMsg){
     el.innerHTML = '<div class="empty-state"><div class="ei">👥</div><p class="et">'+esc(emptyMsg)+'</p></div>';
     return;
   }
-  var statusLabel = {overdue:'🔴 Overdue',pending:'🟡 Pending',plan:'🔵 Payment Plan',paid:'🟢 Paid'};
+  var statusLabel = {due:'🟡 Due',paid:'🟢 Paid'};
   el.innerHTML = list.map(function(d){
     var init = initials(d.name);
     var st   = d.status||'default';
@@ -1085,7 +1072,7 @@ async function openDebtor(id){
     }catch(e){ toast('Could not load debtor: '+e.message,'err'); return; }
   }
   var d = currentDebtor;
-  var statusLabel = {overdue:'🔴 Overdue',pending:'🟡 Pending',plan:'🔵 Payment Plan',paid:'🟢 Paid'};
+  var statusLabel = {due:'🟡 Due',paid:'🟢 Paid'};
 
   // Fill header
   var av = document.getElementById('det-avatar');
@@ -1094,7 +1081,6 @@ async function openDebtor(id){
   setText('det-phone',  '📞 '+(d.phone||'No phone'));
   setText('det-status', statusLabel[d.status]||d.status||'—');
   setText('det-due',    d.due_date ? fmtDate(d.due_date) : '—');
-  setText('det-idnum',  d.id_number||'—');
   setText('det-notes',  d.notes||'—');
 
   // Load ledger and calls in parallel
@@ -1118,6 +1104,24 @@ async function loadLedger(d){
 
     var bills    = bSnap.docs.map(function(x){ return merge({id:x.id,kind:'bill'},x.data()); });
     var payments = pSnap.docs.map(function(x){ return merge({id:x.id,kind:'pay'},x.data()); });
+
+    // Include initial debt as first entry if debtor has an original amount
+    var initAmt = parseFloat(d.initial_amount||d.amount_owed)||0;
+    var hasInitial = (d.initial_amount||0) > 0;
+    if(!hasInitial && bills.length===0 && (parseFloat(d.amount_owed)||0)>0){
+      // Legacy debtors: treat amount_owed as initial debt
+      hasInitial = true; initAmt = parseFloat(d.amount_owed)||0;
+    }
+    if(hasInitial){
+      bills.unshift({
+        id:'__init__', kind:'bill',
+        date: d.created_at&&d.created_at.toDate ? d.created_at.toDate().toISOString().split('T')[0] : (d.due_date||''),
+        bill_number:'INITIAL',
+        amount: initAmt,
+        description:'Opening Balance / Initial Debt',
+        isInitial: true
+      });
+    }
 
     var totalBilled = bills.reduce(function(s,b){ return s+(parseFloat(b.amount)||0); },0);
     var totalPaid   = payments.reduce(function(s,p){ return s+(parseFloat(p.amount)||0); },0);
@@ -1166,7 +1170,7 @@ async function loadLedger(d){
         '<td style="font-size:12px">'+esc(desc)+'</td>'+
         '<td style="'+amtCol+';font-weight:800;text-align:right;white-space:nowrap">'+esc(amtStr)+'</td>'+
         '<td class="'+balCls+'">R '+fmt(running)+'</td>'+
-        '<td><button class="ldel" onclick="'+delFn+'">🗑</button></td>'+
+        '<td>'+(t.isInitial?'':('<button class="ldel" onclick="'+delFn+'">🗑</button>'))+'</td>'+
       '</tr>';
     }).join('');
 
@@ -1299,7 +1303,6 @@ async function saveCall(){
 function openRecordPayment(){
   if(!currentDebtor){ toast('No debtor selected','err'); return; }
   setText('pay-for','Payment from: '+currentDebtor.name);
-  setVal('p-receipt','');
   setVal('p-amt','');
   setVal('p-ref','');
   setVal('p-date', new Date().toISOString().split('T')[0]);
@@ -1308,14 +1311,13 @@ function openRecordPayment(){
 }
 
 async function savePayment(){
-  var receipt = getVal('p-receipt').trim();
   var amt     = parseFloat(getVal('p-amt'));
   var date    = getVal('p-date');
-
-  if(!receipt){ toast('Please enter a receipt number','err'); return; }
   if(!amt)    { toast('Please enter the amount paid','err'); return; }
   if(!date)   { toast('Please select a payment date','err'); return; }
   if(!currentDebtor){ toast('No debtor selected','err'); return; }
+  // Auto-generate sequential receipt number
+  var receipt = await genReceiptNumber();
 
   var method    = getVal('p-method');
   var ref       = getVal('p-ref').trim();
@@ -1373,6 +1375,22 @@ async function delPayment(payId){
 }
 
 // ── SAVE DEBTOR ───────────────────────
+async function genReceiptNumber(){
+  try{
+    var snap = await PAYMENTS.orderBy('created_at','desc').limit(1).get();
+    var last = 0;
+    if(!snap.empty){
+      var rn = snap.docs[0].data().receipt_number||'';
+      var parts = rn.split('-');
+      var num = parseInt(parts[parts.length-1],10);
+      if(!isNaN(num)) last = num;
+    }
+    return 'RCP-'+String(last+1).padStart(3,'0');
+  }catch(e){
+    return 'RCP-'+String(Date.now()).slice(-4);
+  }
+}
+
 function showSaveErr(msg){
   var el = document.getElementById('save-err');
   if(!el) return;
@@ -1396,7 +1414,6 @@ async function saveDebtor(){
   var payload = {
     name:       name,
     phone:      getVal('f-phone').trim(),
-    id_number:  getVal('f-idnum').trim(),
     amount_owed:parseFloat(amount),
     due_date:   due,
     status:     getVal('f-status'),
@@ -1412,7 +1429,8 @@ async function saveDebtor(){
     if(editId){
       await DEBTORS.doc(editId).update(payload);
     } else {
-      payload.created_at = firebase.firestore.FieldValue.serverTimestamp();
+      payload.created_at    = firebase.firestore.FieldValue.serverTimestamp();
+      payload.initial_amount = parsedAmt;
       await DEBTORS.add(payload);
     }
     if(btn){ btn.textContent=editId?'💾 Update Debtor':'💾 Save Debtor'; btn.disabled=false; }
@@ -1434,7 +1452,7 @@ function resetAddForm(){
   var er = document.getElementById('save-err'); if(er) er.style.display='none';
   ['f-name','f-phone','f-idnum','f-amount','f-notes'].forEach(function(id){ setVal(id,''); });
   setVal('f-due', new Date().toISOString().split('T')[0]);
-  setVal('f-status','overdue');
+  setVal('f-status','due');
 }
 
 function cancelEdit(){ resetAddForm(); gotoPage('debtors'); }
@@ -1449,7 +1467,6 @@ function editCurrentDebtor(){
   var db = document.getElementById('del-btn');  if(db) db.style.display='inline-flex';
   setVal('f-name',   d.name||'');
   setVal('f-phone',  d.phone||'');
-  setVal('f-idnum',  d.id_number||'');
   setVal('f-amount', d.amount_owed||'');
   setVal('f-due',    d.due_date||'');
   setVal('f-status', d.status||'overdue');
@@ -1495,21 +1512,19 @@ async function loadReports(){
   var totalPay=0;
   try{ var ps=await PAYMENTS.get(); ps.forEach(function(d){ totalPay+=(parseFloat(d.data().amount)||0); }); }catch(e){}
   var totalOwed = debtors.reduce(function(s,d){ return s+(parseFloat(d.amount_owed)||0); },0);
-  var byStatus  = {overdue:0,pending:0,plan:0,paid:0};
-  debtors.forEach(function(d){ if(byStatus[d.status]!==undefined) byStatus[d.status]++; });
+  var byStatus  = {due:0,paid:0};
+  debtors.forEach(function(d){ if(d.status==='due'||d.status==='paid') byStatus[d.status]++; });
   var total = debtors.length||1;
   el.innerHTML =
     '<div class="stats" style="margin-bottom:20px">'+
       '<div class="scard gold"><div class="sc-icon">💰</div><div class="sc-val">R '+fmt(totalOwed)+'</div><div class="sc-lbl">Total Outstanding</div></div>'+
       '<div class="scard green"><div class="sc-icon">✅</div><div class="sc-val">R '+fmt(totalPay)+'</div><div class="sc-lbl">Total Collected (All Time)</div></div>'+
-      '<div class="scard red"><div class="sc-icon">⏰</div><div class="sc-val">'+byStatus.overdue+'</div><div class="sc-lbl">Overdue</div></div>'+
-      '<div class="scard teal"><div class="sc-icon">🔵</div><div class="sc-val">'+byStatus.plan+'</div><div class="sc-lbl">Payment Plans</div></div>'+
+      '<div class="scard gold"><div class="sc-icon">🟡</div><div class="sc-val">'+byStatus.due+'</div><div class="sc-lbl">Due Accounts</div></div>'+
+      
     '</div>'+
     '<div class="rcard">'+
       '<h2 style="font-size:20px;color:var(--ink);margin-bottom:18px">Account Status Breakdown</h2>'+
-      rBar('🔴 Overdue',byStatus.overdue,total,'var(--red)')+
-      rBar('🟡 Pending',byStatus.pending,total,'var(--gold)')+
-      rBar('🔵 Payment Plan',byStatus.plan,total,'var(--teal)')+
+      rBar('🟡 Due',byStatus.due,total,'var(--gold)')+
       rBar('🟢 Paid',byStatus.paid,total,'var(--green)')+
     '</div>';
 }
@@ -1582,7 +1597,31 @@ async function loadActivity(){
     var newDebs  = results[2].docs.map(function(d){ return merge({id:d.id},d.data()); });
     var total    = pays.reduce(function(s,p){ return s+(parseFloat(p.amount)||0); },0);
 
-    var html = '<div class="stats" style="margin-bottom:20px">'+
+    // ── Reports summary section ──────────────────
+  var debtors2 = await fetchDebtors();
+  var totalPayAll=0;
+  try{ var allPs=await PAYMENTS.get(); allPs.forEach(function(d){ totalPayAll+=(parseFloat(d.data().amount)||0); }); }catch(e){}
+  var totalOwed2 = debtors2.reduce(function(s,d){ return s+(parseFloat(d.amount_owed)||0); },0);
+  var byStatus2  = {due:0,paid:0};
+  debtors2.forEach(function(d){ if(d.status==='due'||d.status==='paid') byStatus2[d.status]++; });
+  var total2 = debtors2.length||1;
+
+  var rptHtml =
+    '<div class="slabel">📊 Collection Summary</div>'+
+    '<div class="stats" style="margin-bottom:16px">'+
+      '<div class="scard gold"><div class="sc-icon">💰</div><div class="sc-val">R '+fmt(totalOwed2)+'</div><div class="sc-lbl">Total Outstanding</div></div>'+
+      '<div class="scard green"><div class="sc-icon">✅</div><div class="sc-val">R '+fmt(totalPayAll)+'</div><div class="sc-lbl">Collected All Time</div></div>'+
+      '<div class="scard gold"><div class="sc-icon">🟡</div><div class="sc-val">'+byStatus2.due+'</div><div class="sc-lbl">Due Accounts</div></div>'+
+      '<div class="scard green"><div class="sc-icon">🟢</div><div class="sc-val">'+byStatus2.paid+'</div><div class="sc-lbl">Paid Accounts</div></div>'+
+    '</div>'+
+    '<div class="rcard" style="margin-bottom:24px">'+
+      '<h2 style="font-size:18px;color:var(--ink);margin-bottom:14px">Account Status Breakdown</h2>'+
+      rBar('🟡 Due',byStatus2.due,total2,'var(--gold)')+
+      rBar('🟢 Paid',byStatus2.paid,total2,'var(--green)')+
+    '</div>'+
+    '<div class="slabel" style="margin-top:4px">📅 Today's Activity</div>';
+
+  var html = rptHtml+'<div class="stats" style="margin-bottom:20px">'+
       '<div class="scard green"><div class="sc-icon">💰</div><div class="sc-val">R '+fmt(total)+'</div><div class="sc-lbl">Collected Today</div></div>'+
       '<div class="scard teal"><div class="sc-icon">💳</div><div class="sc-val">'+pays.length+'</div><div class="sc-lbl">Payments Today</div></div>'+
       '<div class="scard"><div class="sc-icon">📞</div><div class="sc-val">'+calls.length+'</div><div class="sc-lbl">Calls Today</div></div>'+
@@ -1627,14 +1666,12 @@ function updateTargetBar(collected){
   var target = parseFloat(localStorage.getItem('monthly-target')||0);
   setText('target-collected','R '+fmt(collected));
   if(!target){
-    setText('target-lbl','Target: not set — click Set Target');
-    setText('target-pct','');
+      setText('target-pct','');
     setText('target-remaining','');
     var tb = document.getElementById('target-bar'); if(tb) tb.style.width='0%';
     return;
   }
   var pct = Math.min(100,Math.round(collected/target*100));
-  setText('target-lbl','Target: R '+fmt(target));
   setText('target-pct', pct+'%');
   setText('target-remaining', pct>=100 ? '🎉 Target reached!' : 'R '+fmt(Math.max(0,target-collected))+' to go');
   var tb = document.getElementById('target-bar');
@@ -1682,7 +1719,6 @@ async function printStatement(){
   setText('stmt-date',   'Generated: '+new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}));
   setText('stmt-name',   d.name||'—');
   setText('stmt-phone',  d.phone||'—');
-  setText('stmt-idnum',  d.id_number||'—');
   setText('stmt-status', statusLabel[d.status]||d.status||'—');
   setText('stmt-bal',    'R '+fmt(d.amount_owed));
   setText('stmt-due',    d.due_date||'—');
