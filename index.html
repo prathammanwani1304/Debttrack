@@ -1430,7 +1430,7 @@ async function saveDebtor(){
       await DEBTORS.doc(editId).update(payload);
     } else {
       payload.created_at    = firebase.firestore.FieldValue.serverTimestamp();
-      payload.initial_amount = parsedAmt;
+      payload.initial_amount = parseFloat(amount);
       await DEBTORS.add(payload);
     }
     if(btn){ btn.textContent=editId?'💾 Update Debtor':'💾 Save Debtor'; btn.disabled=false; }
