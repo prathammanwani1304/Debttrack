@@ -265,14 +265,7 @@ input,select,textarea { font-family:"Nunito",sans-serif; }
 .ldel { color:var(--bdr); font-size:15px; padding:2px 4px; border-radius:5px; transition:color .12s; cursor:pointer; border:none; background:none; }
 .ldel:hover { color:var(--red); }
 
-/* === CALL LOG === */
-.callwrap { background:var(--bg); border-radius:13px; padding:15px 16px; margin-bottom:13px; }
-.call-ttl { font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:var(--mut); margin-bottom:9px; }
-.centry { border-left:3px solid var(--teal); padding:6px 0 6px 12px; margin-bottom:7px; }
-.centry:last-child { margin-bottom:0; }
-.cdate { font-size:11px; color:var(--mut); }
-.coutcome { font-size:14px; font-weight:800; color:var(--ink); margin-top:2px; }
-.cnote { font-size:12px; color:var(--mut); margin-top:2px; }
+
 
 /* === PAYMENT CARDS === */
 .pcard {
@@ -565,13 +558,8 @@ input,select,textarea { font-family:"Nunito",sans-serif; }
       </div>
       <div class="ltbl-wrap"><div id="ledger-body"><em style="display:block;padding:12px;color:var(--mut);font-size:13px">No transactions yet. Add a bill to start.</em></div></div>
     </div>
-    <!-- Call History -->
-    <div class="callwrap">
-      <div class="call-ttl">📞 Call History</div>
-      <div id="det-calls"><em style="color:var(--mut);font-size:13px">No calls logged yet.</em></div>
-    </div>
+
     <div class="mactions">
-      <button class="btn btn-teal btn-lg"  onclick="openLogCall()">📞 Log a Call</button>
       <button class="btn btn-ink btn-lg"   onclick="openPayment()">💳 Record a Payment</button>
       <button class="btn btn-gold btn-lg"  onclick="openFullLedger()">📒 Open Full Ledger</button>
       <button class="btn btn-ghost btn-lg" onclick="printStatement()">📄 Statement</button>
@@ -614,39 +602,7 @@ input,select,textarea { font-family:"Nunito",sans-serif; }
   </div>
 </div>
 
-<!-- LOG CALL -->
-<div class="overlay" id="ov-call">
-  <div class="modal">
-    <div class="mhandle"></div>
-    <h2 class="mtitle">📞 Log a Call</h2>
-    <div class="msub" id="call-for">Recording call outcome</div>
-    <div class="fgrp">
-      <label class="flbl">What happened? <span class="req">*</span></label>
-      <select class="fsel" id="call-outcome">
-        <option value="">— Please choose —</option>
-        <option>Agreed to pay in full</option>
-        <option>Set up a payment plan</option>
-        <option>Promised to pay — date agreed</option>
-        <option>No answer — left voicemail</option>
-        <option>No answer — no voicemail</option>
-        <option>Refused to pay</option>
-        <option>Call back requested</option>
-      </select>
-    </div>
-    <div class="fgrp">
-      <label class="flbl">Notes (optional)</label>
-      <textarea class="ftxt" id="call-notes" placeholder="Extra details..."></textarea>
-    </div>
-    <div class="fgrp">
-      <label class="flbl">Schedule follow-up call</label>
-      <input class="finput" id="call-followup" type="date">
-    </div>
-    <div class="factions">
-      <button class="btn btn-ink btn-lg" onclick="saveCall()">💾 Save Call</button>
-      <button class="btn btn-ghost btn-lg" onclick="cancelCall()">Cancel</button>
-    </div>
-  </div>
-</div>
+
 
 <!-- RECORD PAYMENT -->
 <div class="overlay" id="ov-payment">
@@ -919,7 +875,6 @@ async function openDebtor(id) {
   var amtEl = gid("det-amt");
   if (amtEl) { amtEl.textContent = "R " + fmt(d.amount_owed); amtEl.className = "big " + st; }
   loadMiniLedger(d);
-  loadCallHistory(d.id);
   openOverlay("ov-detail");
 }
 
@@ -956,26 +911,6 @@ async function loadMiniLedger(d) {
   }
 }
 
-async function loadCallHistory(debtorId) {
-  var el = gid("det-calls");
-  if (!el) return;
-  try {
-    var snap = await CALLS.where("debtor_id", "==", debtorId).orderBy("created_at", "desc").get();
-    if (snap.empty) { el.innerHTML = '<em style="color:var(--mut);font-size:13px">No calls logged yet.</em>'; return; }
-    el.innerHTML = snap.docs.map(function(c) {
-      var cd = c.data();
-      var dt = cd.created_at && cd.created_at.toDate ? cd.created_at.toDate().toLocaleDateString("en-IN", {day:"numeric",month:"short",year:"numeric"}) : (cd.created_at || "");
-      return '<div class="centry">' +
-        '<div class="cdate">' + esc(dt) + "</div>" +
-        '<div class="coutcome">' + esc(cd.outcome || "") + "</div>" +
-        (cd.notes ? '<div class="cnote">' + esc(cd.notes) + "</div>" : "") +
-        (cd.followup_date ? '<div class="cnote">📅 Follow-up: ' + esc(cd.followup_date) + "</div>" : "") +
-      "</div>";
-    }).join("");
-  } catch(e) {
-    el.innerHTML = '<em style="color:var(--mut);font-size:13px">Could not load calls.</em>';
-  }
-}
 
 // ─── FULL LEDGER PAGE ─────────────────────────────────
 function openFullLedger() {
@@ -1146,38 +1081,8 @@ async function delBill(billId) {
 }
 
 // ─── LOG CALL ─────────────────────────────────────────
-function openLogCall() {
-  if (!currentDebtor) { showToast("No debtor selected", "err"); return; }
-  setTxt("call-for", "Call with: " + currentDebtor.name);
-  setVal("call-outcome", "");
-  setVal("call-notes", "");
-  setVal("call-followup", toDateStr(new Date(Date.now() + 86400000)));
-  closeOverlay("ov-detail");
-  openOverlay("ov-call");
-}
 
-function cancelCall() {
-  closeOverlay("ov-call");
-  openOverlay("ov-detail");
-}
 
-async function saveCall() {
-  var outcome = getVal("call-outcome");
-  if (!outcome) { showToast("Please choose what happened on the call", "err"); return; }
-  if (!currentDebtor) { showToast("No debtor selected", "err"); return; }
-  try {
-    await CALLS.add({
-      debtor_id:     currentDebtor.id,
-      outcome:       outcome,
-      notes:         getVal("call-notes").trim(),
-      followup_date: getVal("call-followup"),
-      created_at:    firebase.firestore.FieldValue.serverTimestamp()
-    });
-    showToast("Call logged!", "ok");
-    closeOverlay("ov-call");
-    openDebtor(currentDebtor.id);
-  } catch(e) { showToast("Could not save call: " + e.message, "err"); }
-}
 
 // ─── RECORD PAYMENT ───────────────────────────────────
 function openPayment() {
@@ -1388,15 +1293,14 @@ async function loadActivity() {
       PAYMENTS.get(),
       PAYMENTS.where("payment_date", "==", today).get(),
       BILLS.where("date", "==", today).get(),
-      CALLS.where("created_at", ">=", startOfDay).orderBy("created_at","desc").get(),
+  
       DEBTORS.where("created_at", ">=", startOfDay).get()
     ]);
     var debtors   = results[0];
     var allPays   = results[1];
     var todayPays = results[2].docs.map(function(d) { return d.data(); });
     var todayBills= results[3].docs.map(function(d) { return d.data(); });
-    var todayCalls= results[4].docs.map(function(d) { return d.data(); });
-    var newDebs   = results[5].docs.map(function(d) { return obj(d); });
+    var newDebs   = results[4].docs.map(function(d) { return obj(d); });
 
     var totalOwed    = debtors.reduce(function(s,d)  { return s + num(d.amount_owed); }, 0);
     var totalCollAll = 0; allPays.forEach(function(d) { totalCollAll += num(d.data().amount); });
@@ -1424,7 +1328,7 @@ async function loadActivity() {
         '<div class="scard green"><div class="sc-icon">💰</div><div class="sc-val">R ' + fmt(todayCollected) + '</div><div class="sc-lbl">Collected Today</div></div>' +
         '<div class="scard teal"><div class="sc-icon">💳</div><div class="sc-val">' + todayPays.length + '</div><div class="sc-lbl">Payments Today</div></div>' +
         '<div class="scard gold"><div class="sc-icon">🧾</div><div class="sc-val">R ' + fmt(todayBilled) + '</div><div class="sc-lbl">Billed Today</div></div>' +
-        '<div class="scard"><div class="sc-icon">📞</div><div class="sc-val">' + todayCalls.length + '</div><div class="sc-lbl">Calls Today</div></div>' +
+
       '</div>';
 
     // Today payments
@@ -1550,15 +1454,6 @@ async function printStatement() {
         '<td><b>Balance Due</b></td><td class="tr" style="color:red"><b>R ' + fmt(Math.max(0, totalB - totalP)) + "</b></td></tr></tbody></table>"
       : '<p style="font-size:12px;color:#555">No payments recorded.</p>';
 
-    body += "<br><b>Call History</b><br>";
-    body += allCalls.length
-      ? '<table class="prt-tbl" style="margin-top:4px"><thead><tr><th>Date</th><th>Outcome</th><th>Notes</th></tr></thead><tbody>' +
-        allCalls.map(function(x) {
-          var c=x.data();
-          var dt = c.created_at && c.created_at.toDate ? c.created_at.toDate().toLocaleDateString("en-IN") : "—";
-          return "<tr><td>" + esc(dt) + "</td><td>" + esc(c.outcome||"—") + "</td><td>" + esc(c.notes||"—") + "</td></tr>";
-        }).join("") + "</tbody></table>"
-      : '<p style="font-size:12px;color:#555">No calls recorded.</p>';
   } catch(e) { body = "<p>Could not load data: " + esc(e.message) + "</p>"; }
   var bodyEl = gid("stmt-body"); if (bodyEl) bodyEl.innerHTML = body;
   var el = gid("prt-stmt");
@@ -1683,10 +1578,9 @@ async function printStatement() {
   try {
     var r = await Promise.all([
       BILLS.where("debtor_id","==",d.id).orderBy("date","asc").get(),
-      PAYMENTS.where("debtor_id","==",d.id).orderBy("payment_date","asc").get(),
-      CALLS.where("debtor_id","==",d.id).orderBy("created_at","desc").get()
+      PAYMENTS.where("debtor_id","==",d.id).orderBy("payment_date","asc").get()
     ]);
-    var allBills = r[0].docs; var allPays = r[1].docs; var allCalls = r[2].docs;
+    var allBills = r[0].docs; var allPays = r[1].docs;
     var totalB = allBills.reduce(function(s,x){ return s+num(x.data().amount); },0);
     var totalP = allPays.reduce(function(s,x){  return s+num(x.data().amount); },0);
     var last10B = allBills.slice(-10);
@@ -1702,22 +1596,22 @@ async function printStatement() {
       '<tr><td><b>Balance Due:</b></td><td class="red bold" style="font-size:15px">R ' + fmt(d.amount_owed) + "</td></tr></table>" +
       '<div class="hr-solid"></div>' +
       "<b>Credit Purchases — Last " + Math.min(10,allBills.length) + " of " + allBills.length + "</b>" +
-      (allBills.length
-        ? "<table><thead><tr><th>Date</th><th>Bill No.</th><th>Description</th><th class='tr'>Amount</th></tr></thead><tbody>" +
-          last10B.map(function(x){ var b=x.data(); return "<tr><td>"+esc(b.date||"—")+"</td><td><b>"+esc(b.bill_number||"—")+"</b></td><td>"+esc(b.description||"—")+"</td><td class='tr'>R "+fmt(b.amount)+"</td></tr>"; }).join("") +
-          "<tr style='border-top:1px solid #000'><td colspan='3'><b>Total Billed (All Time)</b></td><td class='tr'><b>R "+fmt(totalB)+"</b></td></tr></tbody></table>"
-        : '<p style="font-size:12px;color:#555">No bills recorded.</p>') +
+      (function(){
+        var initAmt = num(d.initial_amount) || num(d.amount_owed);
+        var initDate = d.due_date || "—";
+        var initRow = "<tr style='background:#fff8f0'><td>"+esc(initDate)+"</td><td><b>INITIAL</b></td><td>Opening Balance / Initial Debt</td><td class='tr'><b>R "+fmt(initAmt)+"</b></td></tr>";
+        var billRows = last10B.map(function(x){ var b=x.data(); return "<tr><td>"+esc(b.date||"—")+"</td><td><b>"+esc(b.bill_number||"—")+"</b></td><td>"+esc(b.description||"—")+"</td><td class='tr'>R "+fmt(b.amount)+"</td></tr>"; }).join("");
+        return "<table><thead><tr><th>Date</th><th>Bill No.</th><th>Description</th><th class='tr'>Amount</th></tr></thead><tbody>" +
+          initRow + billRows +
+          "<tr style='border-top:1px solid #000'><td colspan='3'><b>Total Billed (All Time)</b></td><td class='tr'><b>R "+fmt(totalB + initAmt)+"</b></td></tr></tbody></table>";
+      })() +
       "<br><b>Payments Received — Last " + Math.min(10,allPays.length) + " of " + allPays.length + "</b>" +
       (allPays.length
         ? "<table><thead><tr><th>Date</th><th>Receipt No.</th><th>Method</th><th class='tr'>Amount</th></tr></thead><tbody>" +
           last10P.map(function(x){ var p=x.data(); return "<tr><td>"+esc(p.payment_date||"—")+(p.payment_time?" "+esc(p.payment_time):"")+"</td><td><b>"+esc(p.receipt_number||"—")+"</b></td><td>"+esc(p.method||"—")+"</td><td class='tr green'>R "+fmt(p.amount)+"</td></tr>"; }).join("") +
           "<tr style='border-top:2px solid #000'><td colspan='2'><b>Total Paid: R "+fmt(totalP)+"</b></td><td><b>Balance Due</b></td><td class='tr red'><b>R "+fmt(Math.max(0,totalB-totalP))+"</b></td></tr></tbody></table>"
         : '<p style="font-size:12px;color:#555">No payments recorded.</p>') +
-      "<br><b>Call History</b>" +
-      (allCalls.length
-        ? "<table><thead><tr><th>Date</th><th>Outcome</th><th>Notes</th></tr></thead><tbody>" +
-          allCalls.map(function(x){ var c=x.data(); var dt=c.created_at&&c.created_at.toDate?c.created_at.toDate().toLocaleDateString("en-IN"):"—"; return "<tr><td>"+esc(dt)+"</td><td>"+esc(c.outcome||"—")+"</td><td>"+esc(c.notes||"—")+"</td></tr>"; }).join("") + "</tbody></table>"
-        : '<p style="font-size:12px;color:#555">No calls recorded.</p>') +
+
       '<div class="hr-solid"></div>' +
       '<div class="center" style="font-size:11px;color:#555">Computer-generated statement — Manwani Traders</div>';
   } catch(e) { body = "<p>Could not load data: " + esc(e.message) + "</p>"; }
