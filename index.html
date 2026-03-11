@@ -361,22 +361,7 @@ input,select,textarea { font-family:"Nunito",sans-serif; }
 .itext strong { display:block; font-size:15px; margin-bottom:2px; }
 .iclose { background:rgba(255,255,255,.18); border:none; color:#fff; width:28px; height:28px; border-radius:50%; font-size:15px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; font-family:"Nunito",sans-serif; }
 
-/* === PRINT === */
-#prt-receipt,#prt-stmt,#prt-bills,#prt-pays { display:none; }
-@media print {
-  body * { visibility:hidden !important; }
-  #prt-receipt, #prt-receipt *,
-  #prt-stmt,    #prt-stmt *,
-  #prt-bills,   #prt-bills *,
-  #prt-pays,    #prt-pays * { visibility:visible !important; }
-  #prt-receipt { position:fixed !important; top:0; left:0; width:80mm; margin:0; padding:4px; }
-  #prt-stmt,#prt-bills,#prt-pays { position:fixed !important; top:0; left:0; width:100%; margin:0; padding:18px; }
-}
-.prt { font-family:"Courier New",monospace; font-size:12px; color:#000; background:#fff; }
-.prt-c { text-align:center; }
-.prt-b { font-weight:bold; }
-.prt-hr { border:none; border-top:1px dashed #000; margin:5px 0; }
-.prt-row { display:flex; justify-content:space-between; margin:2px 0; }
+/* === PRINT (handled via new window) === */
 .prt-tbl { width:100%; font-size:12px; border-collapse:collapse; }
 .prt-tbl th { text-align:left; border-bottom:1px solid #000; padding:3px 4px; }
 .prt-tbl td { padding:3px 4px; }
@@ -420,14 +405,25 @@ input,select,textarea { font-family:"Nunito",sans-serif; }
   <div class="page active" id="pg-dashboard">
     <div class="ph">
       <div><h1 class="ph-title">Good day 👋</h1><div class="ph-sub" id="dash-date"></div></div>
+      <button class="btn btn-ink" onclick="gotoPage('add')">➕ Add Debtor</button>
     </div>
-    <div class="stats">
-      <div class="scard gold"> <div class="sc-icon">🟡</div><div class="sc-val" id="ds-due">—</div><div class="sc-lbl">Due Accounts</div></div>
-      <div class="scard red">  <div class="sc-icon">💰</div><div class="sc-val" id="ds-outstanding">—</div><div class="sc-lbl">Total Outstanding</div></div>
-      <div class="scard green"><div class="sc-icon">✅</div><div class="sc-val" id="ds-collected">—</div><div class="sc-lbl">Collected This Month</div></div>
-      <div class="scard teal"> <div class="sc-icon">👥</div><div class="sc-val" id="ds-total">—</div><div class="sc-lbl">Total Debtors</div></div>
+    <!-- Today collection bar -->
+    <div id="dash-today-bar" style="background:var(--srf);border:2px solid var(--grnbr);border-radius:var(--r);padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;box-shadow:var(--sh1)">
+      <div>
+        <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--mut);margin-bottom:3px">💰 Collected Today</div>
+        <div style="font-family:'Lora',serif;font-size:28px;font-weight:700;color:var(--grn)" id="ds-today">R 0</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--mut);margin-bottom:3px">💳 Payments</div>
+        <div style="font-family:'Lora',serif;font-size:28px;font-weight:700;color:var(--teal)" id="ds-pays-count">0</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--mut);margin-bottom:3px">🟡 Still Due</div>
+        <div style="font-family:'Lora',serif;font-size:28px;font-weight:700;color:var(--gold)" id="ds-due">—</div>
+      </div>
     </div>
-    <div class="slbl">⚠️ Needs Attention</div>
+    <!-- All debtors list -->
+    <div class="slbl">👥 All Debtors</div>
     <div class="dlist" id="dash-list"><div class="loading"><div class="spinner"></div><p>Loading...</p></div></div>
   </div>
 
@@ -715,81 +711,6 @@ input,select,textarea { font-family:"Nunito",sans-serif; }
   </div>
 </div>
 
-<!-- PRINT: RECEIPT -->
-<div id="prt-receipt" class="prt">
-  <div class="prt-c prt-b" style="font-size:15px">MANWANI TRADERS</div>
-  <div class="prt-c" style="font-size:11px">Payment Receipt</div>
-  <hr class="prt-hr">
-  <div class="prt-row"><span>Receipt No:</span><span id="r-num" class="prt-b">—</span></div>
-  <div class="prt-row"><span>Date:</span><span id="r-date">—</span></div>
-  <hr class="prt-hr">
-  <div class="prt-row"><span>Debtor:</span><span id="r-name">—</span></div>
-  <div class="prt-row"><span>Phone:</span><span id="r-phone">—</span></div>
-  <hr class="prt-hr">
-  <div class="prt-row prt-b"><span>Amount Paid:</span><span id="r-amt">—</span></div>
-  <div class="prt-row"><span>Method:</span><span id="r-method">—</span></div>
-  <div class="prt-row"><span>Reference:</span><span id="r-ref">—</span></div>
-  <div class="prt-row"><span>Balance Left:</span><span id="r-bal">—</span></div>
-  <hr class="prt-hr">
-  <div class="prt-c" style="font-size:11px">Printed: <span id="r-printed">—</span></div>
-  <div class="prt-c prt-b" style="margin-top:4px">Thank you for your payment!</div>
-  <br><br>
-</div>
-
-<!-- PRINT: STATEMENT -->
-<div id="prt-stmt" class="prt" style="padding:20px">
-  <div class="prt-c" style="margin-bottom:12px">
-    <div style="font-size:20px;font-weight:bold">MANWANI TRADERS</div>
-    <div style="font-size:14px;margin-top:3px;font-weight:bold">STATEMENT OF ACCOUNT</div>
-    <div style="font-size:12px;color:#555;margin-top:3px" id="stmt-date">—</div>
-  </div>
-  <hr style="border:1px solid #000;margin:8px 0">
-  <table style="width:100%;font-size:13px;margin-bottom:8px">
-    <tr><td><b>Debtor:</b></td><td id="stmt-name">—</td><td><b>Phone:</b></td><td id="stmt-phone">—</td></tr>
-    <tr><td><b>Status:</b></td><td id="stmt-status">—</td><td><b>Due Date:</b></td><td id="stmt-due">—</td></tr>
-    <tr><td><b>Balance Due:</b></td><td id="stmt-bal" style="font-weight:bold;color:red;font-size:15px">—</td></tr>
-  </table>
-  <hr style="border:1px solid #000;margin:8px 0">
-  <div id="stmt-body"></div>
-  <hr style="border:1px solid #000;margin:12px 0">
-  <div class="prt-c" style="font-size:11px;color:#555">Computer-generated statement — Manwani Traders</div>
-</div>
-
-<!-- PRINT: TODAY BILLS -->
-<div id="prt-bills" class="prt" style="padding:20px">
-  <div class="prt-c" style="margin-bottom:12px">
-    <div style="font-size:20px;font-weight:bold">MANWANI TRADERS</div>
-    <div style="font-size:15px;font-weight:bold;margin-top:3px">DAILY BILLS REPORT</div>
-    <div style="font-size:12px;color:#555;margin-top:3px" id="bills-date">—</div>
-  </div>
-  <hr style="border:1px solid #000;margin:8px 0">
-  <table style="width:100%;font-size:12px;margin-bottom:8px">
-    <tr><td><b>Total Bills Today:</b></td><td id="bills-count">—</td></tr>
-    <tr><td><b>Total Amount Billed:</b></td><td id="bills-total" style="font-weight:bold;font-size:15px">—</td></tr>
-  </table>
-  <hr style="border:1px solid #000;margin:8px 0">
-  <div id="bills-body"></div>
-  <hr style="border:1px solid #000;margin:12px 0">
-  <div class="prt-c" style="font-size:11px;color:#555">End of Bills Report — Manwani Traders</div>
-</div>
-
-<!-- PRINT: TODAY PAYMENTS -->
-<div id="prt-pays" class="prt" style="padding:20px">
-  <div class="prt-c" style="margin-bottom:12px">
-    <div style="font-size:20px;font-weight:bold">MANWANI TRADERS</div>
-    <div style="font-size:15px;font-weight:bold;margin-top:3px">DAILY PAYMENTS REPORT</div>
-    <div style="font-size:12px;color:#555;margin-top:3px" id="pays-date">—</div>
-  </div>
-  <hr style="border:1px solid #000;margin:8px 0">
-  <table style="width:100%;font-size:12px;margin-bottom:8px">
-    <tr><td><b>Total Payments Today:</b></td><td id="pays-count">—</td></tr>
-    <tr><td><b>Total Amount Collected:</b></td><td id="pays-total" style="font-weight:bold;font-size:15px;color:green">—</td></tr>
-  </table>
-  <hr style="border:1px solid #000;margin:8px 0">
-  <div id="pays-body"></div>
-  <hr style="border:1px solid #000;margin:12px 0">
-  <div class="prt-c" style="font-size:11px;color:#555">End of Payments Report — Manwani Traders</div>
-</div>
 
 <!-- TARGET MINI WIDGET -->
 <div class="target-mini" id="target-mini" onclick="openOverlay('ov-target')">
@@ -902,21 +823,36 @@ async function fetchDebtors() {
 // ─── DASHBOARD ────────────────────────────────────────
 async function loadDashboard() {
   allDebtors = await fetchDebtors();
-  var due         = allDebtors.filter(function(d) { return d.status === "due"; }).length;
-  var outstanding = allDebtors.reduce(function(s,d) { return s + (num(d.amount_owed)); }, 0);
-  var collected   = 0;
+  var due = allDebtors.filter(function(d) { return d.status === "due"; }).length;
+  setTxt("ds-due", String(due));
+
+  // Today collections
+  var today = toDateStr(new Date());
+  var todayCollected = 0;
+  var todayPaysCount = 0;
   try {
-    var msStr = toDateStr(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
-    var ps = await PAYMENTS.where("payment_date", ">=", msStr).get();
-    ps.forEach(function(d) { collected += num(d.data().amount); });
+    var ps = await PAYMENTS.where("payment_date", "==", today).get();
+    ps.forEach(function(d) { todayCollected += num(d.data().amount); todayPaysCount++; });
   } catch(e) {}
-  setTxt("ds-due",         String(due));
-  setTxt("ds-outstanding", "R " + fmt(outstanding));
-  setTxt("ds-collected",   "R " + fmt(collected));
-  setTxt("ds-total",       String(allDebtors.length));
-  updateTargetWidget(collected);
-  var urgent = allDebtors.filter(function(d) { return d.status === "due"; }).slice(0, 8);
-  renderList("dash-list", urgent, "No due accounts right now!");
+  setTxt("ds-today",      "R " + fmt(todayCollected));
+  setTxt("ds-pays-count", String(todayPaysCount));
+
+  // Monthly target widget
+  var monthStart = toDateStr(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  var monthCollected = 0;
+  try {
+    var mps = await PAYMENTS.where("payment_date", ">=", monthStart).get();
+    mps.forEach(function(d) { monthCollected += num(d.data().amount); });
+  } catch(e) {}
+  updateTargetWidget(monthCollected);
+
+  // Show ALL debtors, due first
+  var sorted = allDebtors.slice().sort(function(a, b) {
+    if (a.status === "due" && b.status !== "due") return -1;
+    if (a.status !== "due" && b.status === "due") return  1;
+    return num(b.amount_owed) - num(a.amount_owed);
+  });
+  renderList("dash-list", sorted, "No debtors yet. Tap Add Debtor to get started.");
 }
 
 async function loadAllDebtors() {
@@ -1675,6 +1611,172 @@ async function printDailyPayments() {
     var bodyEl = gid("pays-body"); if (bodyEl) bodyEl.innerHTML = body;
     var el = gid("prt-pays");
     if (el) { el.style.display = "block"; setTimeout(function() { window.print(); el.style.display = "none"; }, 300); }
+  } catch(e) { showToast("Error: " + e.message, "err"); }
+}
+
+// ─── PRINT ENGINE (works on iPad / iPhone / Desktop) ─────────
+// Opens a new window with formatted content → triggers print dialog
+// On iOS + AirPrint WiFi printer this works natively
+function printWindow(title, bodyHtml) {
+  var css = [
+    "body{font-family:'Courier New',monospace;font-size:13px;color:#000;margin:0;padding:16px}",
+    ".center{text-align:center}",
+    ".bold{font-weight:bold}",
+    ".big{font-size:18px;font-weight:bold}",
+    ".hr{border:none;border-top:1px dashed #000;margin:6px 0}",
+    ".hr-solid{border:none;border-top:2px solid #000;margin:6px 0}",
+    ".row{display:flex;justify-content:space-between;margin:3px 0;font-size:12px}",
+    "table{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}",
+    "th{text-align:left;border-bottom:1px solid #000;padding:4px 5px;font-size:11px}",
+    "td{padding:4px 5px;vertical-align:top}",
+    ".tr{text-align:right}",
+    ".green{color:green}",
+    ".red{color:red}",
+    "@media print{@page{margin:8mm}}"
+  ].join(" ");
+  var html = "<!DOCTYPE html><html><head><meta charset='UTF-8'>" +
+    "<meta name='viewport' content='width=device-width,initial-scale=1'>" +
+    "<title>" + title + "</title>" +
+    "<style>" + css + "</style></head><body>" +
+    bodyHtml +
+    "<script>window.onload=function(){setTimeout(function(){window.print();},400);}<\/script>" +
+    "</body></html>";
+  var w = window.open("", "_blank", "width=600,height=800");
+  if (!w) { showToast("Allow popups for printing", "err"); return; }
+  w.document.write(html);
+  w.document.close();
+}
+
+// ─── PRINT RECEIPT ────────────────────────────────────
+function printReceipt(p) {
+  var printed = new Date().toLocaleDateString("en-IN", {day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});
+  var html =
+    '<div class="center"><div class="big">MANWANI TRADERS</div>' +
+    '<div style="font-size:12px;margin-top:2px">Payment Receipt</div></div>' +
+    '<div class="hr"></div>' +
+    '<div class="row"><span>Receipt No:</span><span class="bold">' + esc(p.receipt_number||"—") + "</span></div>" +
+    '<div class="row"><span>Date:</span><span>' + esc(p.date||"—") + "</span></div>" +
+    '<div class="hr"></div>' +
+    '<div class="row"><span>Debtor:</span><span class="bold">' + esc(p.name||"—") + "</span></div>" +
+    '<div class="row"><span>Phone:</span><span>' + esc(p.phone||"—") + "</span></div>" +
+    '<div class="hr"></div>' +
+    '<div class="row bold" style="font-size:15px"><span>Amount Paid:</span><span>R ' + fmt(p.amount) + "</span></div>" +
+    '<div class="row"><span>Method:</span><span>' + esc(p.method||"—") + "</span></div>" +
+    (p.ref && p.ref !== "—" ? '<div class="row"><span>Reference:</span><span>' + esc(p.ref) + "</span></div>" : "") +
+    '<div class="row"><span>Balance Left:</span><span>R ' + fmt(p.balance) + "</span></div>" +
+    '<div class="hr"></div>' +
+    '<div class="center" style="font-size:11px;color:#555">Printed: ' + printed + "</div>" +
+    '<div class="center bold" style="margin-top:5px">Thank you for your payment!</div><br><br>';
+  printWindow("Receipt " + (p.receipt_number||""), html);
+}
+
+// ─── PRINT STATEMENT ──────────────────────────────────
+async function printStatement() {
+  var d = currentDebtor; if (!d) { showToast("No debtor selected", "err"); return; }
+  closeOverlay("ov-detail");
+  var statusLabel = {due:"Due", paid:"Paid"};
+  var genDate = new Date().toLocaleDateString("en-IN", {day:"numeric",month:"long",year:"numeric"});
+  var body = "";
+  try {
+    var r = await Promise.all([
+      BILLS.where("debtor_id","==",d.id).orderBy("date","asc").get(),
+      PAYMENTS.where("debtor_id","==",d.id).orderBy("payment_date","asc").get(),
+      CALLS.where("debtor_id","==",d.id).orderBy("created_at","desc").get()
+    ]);
+    var allBills = r[0].docs; var allPays = r[1].docs; var allCalls = r[2].docs;
+    var totalB = allBills.reduce(function(s,x){ return s+num(x.data().amount); },0);
+    var totalP = allPays.reduce(function(s,x){  return s+num(x.data().amount); },0);
+    var last10B = allBills.slice(-10);
+    var last10P = allPays.slice(-10);
+
+    body =
+      '<div class="center"><div class="big">MANWANI TRADERS</div>' +
+      '<div style="font-size:14px;font-weight:bold;margin-top:3px">STATEMENT OF ACCOUNT</div>' +
+      '<div style="font-size:11px;color:#555;margin-top:2px">Generated: ' + genDate + "</div></div>" +
+      '<div class="hr-solid"></div>' +
+      '<table style="margin-bottom:8px"><tr><td><b>Debtor:</b></td><td>' + esc(d.name||"—") + '</td><td><b>Phone:</b></td><td>' + esc(d.phone||"—") + "</td></tr>" +
+      '<tr><td><b>Status:</b></td><td>' + esc(statusLabel[d.status]||d.status||"—") + '</td><td><b>Due Date:</b></td><td>' + esc(d.due_date||"—") + "</td></tr>" +
+      '<tr><td><b>Balance Due:</b></td><td class="red bold" style="font-size:15px">R ' + fmt(d.amount_owed) + "</td></tr></table>" +
+      '<div class="hr-solid"></div>' +
+      "<b>Credit Purchases — Last " + Math.min(10,allBills.length) + " of " + allBills.length + "</b>" +
+      (allBills.length
+        ? "<table><thead><tr><th>Date</th><th>Bill No.</th><th>Description</th><th class='tr'>Amount</th></tr></thead><tbody>" +
+          last10B.map(function(x){ var b=x.data(); return "<tr><td>"+esc(b.date||"—")+"</td><td><b>"+esc(b.bill_number||"—")+"</b></td><td>"+esc(b.description||"—")+"</td><td class='tr'>R "+fmt(b.amount)+"</td></tr>"; }).join("") +
+          "<tr style='border-top:1px solid #000'><td colspan='3'><b>Total Billed (All Time)</b></td><td class='tr'><b>R "+fmt(totalB)+"</b></td></tr></tbody></table>"
+        : '<p style="font-size:12px;color:#555">No bills recorded.</p>') +
+      "<br><b>Payments Received — Last " + Math.min(10,allPays.length) + " of " + allPays.length + "</b>" +
+      (allPays.length
+        ? "<table><thead><tr><th>Date</th><th>Receipt No.</th><th>Method</th><th class='tr'>Amount</th></tr></thead><tbody>" +
+          last10P.map(function(x){ var p=x.data(); return "<tr><td>"+esc(p.payment_date||"—")+"</td><td><b>"+esc(p.receipt_number||"—")+"</b></td><td>"+esc(p.method||"—")+"</td><td class='tr green'>R "+fmt(p.amount)+"</td></tr>"; }).join("") +
+          "<tr style='border-top:2px solid #000'><td colspan='2'><b>Total Paid: R "+fmt(totalP)+"</b></td><td><b>Balance Due</b></td><td class='tr red'><b>R "+fmt(Math.max(0,totalB-totalP))+"</b></td></tr></tbody></table>"
+        : '<p style="font-size:12px;color:#555">No payments recorded.</p>') +
+      "<br><b>Call History</b>" +
+      (allCalls.length
+        ? "<table><thead><tr><th>Date</th><th>Outcome</th><th>Notes</th></tr></thead><tbody>" +
+          allCalls.map(function(x){ var c=x.data(); var dt=c.created_at&&c.created_at.toDate?c.created_at.toDate().toLocaleDateString("en-IN"):"—"; return "<tr><td>"+esc(dt)+"</td><td>"+esc(c.outcome||"—")+"</td><td>"+esc(c.notes||"—")+"</td></tr>"; }).join("") + "</tbody></table>"
+        : '<p style="font-size:12px;color:#555">No calls recorded.</p>') +
+      '<div class="hr-solid"></div>' +
+      '<div class="center" style="font-size:11px;color:#555">Computer-generated statement — Manwani Traders</div>';
+  } catch(e) { body = "<p>Could not load data: " + esc(e.message) + "</p>"; }
+  printWindow("Statement — " + (d.name||""), body);
+}
+
+// ─── PRINT TODAY BILLS ────────────────────────────────
+async function printDailyBills() {
+  var today = toDateStr(new Date());
+  var ds = new Date().toLocaleDateString("en-IN", {weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  try {
+    var snap  = await BILLS.where("date","==",today).get();
+    var bills = snap.docs.map(function(d){ return d.data(); });
+    var total = bills.reduce(function(s,b){ return s+num(b.amount); },0);
+    var body =
+      '<div class="center"><div class="big">MANWANI TRADERS</div>' +
+      '<div style="font-size:14px;font-weight:bold;margin-top:3px">DAILY BILLS REPORT</div>' +
+      '<div style="font-size:11px;color:#555;margin-top:2px">' + esc(ds) + "</div></div>" +
+      '<div class="hr-solid"></div>' +
+      '<table style="margin-bottom:8px"><tr><td><b>Total Bills Today:</b></td><td>' + bills.length + "</td></tr>" +
+      '<tr><td><b>Total Amount Billed:</b></td><td class="bold" style="font-size:15px">R ' + fmt(total) + "</td></tr></table>" +
+      '<div class="hr-solid"></div>' +
+      (bills.length
+        ? "<table><thead><tr><th>Debtor</th><th>Bill No.</th><th>Description</th><th class='tr'>Amount</th></tr></thead><tbody>" +
+          bills.map(function(b){
+            var d = allDebtors.find(function(x){ return x.id===b.debtor_id; });
+            return "<tr><td><b>"+esc(d?d.name:"—")+"</b><br><span style='font-size:10px;color:#666'>"+esc(d&&d.phone?d.phone:"")+"</span></td><td>"+esc(b.bill_number||"—")+"</td><td>"+esc(b.description||"—")+"</td><td class='tr'>R "+fmt(b.amount)+"</td></tr>";
+          }).join("") +
+          "<tr style='border-top:2px solid #000'><td colspan='3'><b>Total</b></td><td class='tr'><b>R "+fmt(total)+"</b></td></tr></tbody></table>"
+        : '<p style="font-size:12px;color:#555">No bills recorded today.</p>') +
+      '<div class="hr-solid"></div>' +
+      '<div class="center" style="font-size:11px;color:#555">End of Bills Report — Manwani Traders</div>';
+    printWindow("Daily Bills — " + ds, body);
+  } catch(e) { showToast("Error: " + e.message, "err"); }
+}
+
+// ─── PRINT TODAY PAYMENTS ─────────────────────────────
+async function printDailyPayments() {
+  var today = toDateStr(new Date());
+  var ds = new Date().toLocaleDateString("en-IN", {weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  try {
+    var snap = await PAYMENTS.where("payment_date","==",today).get();
+    var pays = snap.docs.map(function(d){ return d.data(); });
+    var total = pays.reduce(function(s,p){ return s+num(p.amount); },0);
+    var body =
+      '<div class="center"><div class="big">MANWANI TRADERS</div>' +
+      '<div style="font-size:14px;font-weight:bold;margin-top:3px">DAILY PAYMENTS REPORT</div>' +
+      '<div style="font-size:11px;color:#555;margin-top:2px">' + esc(ds) + "</div></div>" +
+      '<div class="hr-solid"></div>' +
+      '<table style="margin-bottom:8px"><tr><td><b>Total Payments Today:</b></td><td>' + pays.length + "</td></tr>" +
+      '<tr><td><b>Total Collected:</b></td><td class="bold green" style="font-size:15px">R ' + fmt(total) + "</td></tr></table>" +
+      '<div class="hr-solid"></div>' +
+      (pays.length
+        ? "<table><thead><tr><th>Debtor</th><th>Receipt No.</th><th>Method</th><th class='tr'>Amount</th></tr></thead><tbody>" +
+          pays.map(function(p){
+            return "<tr><td><b>"+esc(p.debtor_name||"—")+"</b></td><td>"+esc(p.receipt_number||"—")+"</td><td>"+esc(p.method||"—")+"</td><td class='tr green'>R "+fmt(p.amount)+"</td></tr>";
+          }).join("") +
+          "<tr style='border-top:2px solid #000'><td colspan='3'><b>Total Collected</b></td><td class='tr green'><b>R "+fmt(total)+"</b></td></tr></tbody></table>"
+        : '<p style="font-size:12px;color:#555">No payments today.</p>') +
+      '<div class="hr-solid"></div>' +
+      '<div class="center" style="font-size:11px;color:#555">End of Payments Report — Manwani Traders</div>';
+    printWindow("Daily Payments — " + ds, body);
   } catch(e) { showToast("Error: " + e.message, "err"); }
 }
 
