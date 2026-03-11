@@ -1056,7 +1056,7 @@ function ledgerRow(t, running) {
   var isBill = t.kind === "bill";
   var date   = isBill ? t.date : t.payment_date;
   var ref    = isBill ? (t.bill_number || "—") : (t.receipt_number || t.reference || "—");
-  var desc   = isBill ? (t.description || "Credit Purchase") : (t.method || "Payment");
+  var desc   = isBill ? (t.description || "Credit Purchase") : ((t.method || "Payment") + (t.payment_time ? " · " + t.payment_time : ""));
   var amt    = num(t.amount);
   var amtStr = (isBill ? "+ R " : "- R ") + fmt(amt);
   var amtCol = isBill ? "color:var(--red)" : "color:var(--grn)";
@@ -1208,12 +1208,15 @@ async function savePayment() {
   var newStatus = getVal("p-status");
   var newAmt    = Math.max(0, num(currentDebtor.amount_owed) - amt);
   try {
+    var now = new Date();
+    var timeStr = now.toLocaleTimeString("en-IN", {hour:"2-digit", minute:"2-digit", hour12:true});
     await PAYMENTS.add({
       debtor_id:      currentDebtor.id,
       debtor_name:    currentDebtor.name,
       receipt_number: receipt,
       amount:         amt,
       payment_date:   date,
+      payment_time:   timeStr,
       method:         method,
       reference:      ref,
       created_at:     firebase.firestore.FieldValue.serverTimestamp()
@@ -1365,7 +1368,7 @@ async function loadPayments() {
       var p = d.data();
       return '<div class="pcard">' +
         '<div><div class="pname">' + esc(p.debtor_name || "—") + "</div>" +
-        '<div class="pmeta">' + esc(p.receipt_number || "—") + " · " + esc(p.method || "—") + " · " + esc(p.payment_date || "") + "</div></div>" +
+        '<div class="pmeta">' + esc(p.receipt_number || "—") + " · " + esc(p.method || "—") + " · " + esc(p.payment_date || "") + (p.payment_time ? " at " + esc(p.payment_time) : "") + "</div></div>" +
         '<div class="pamt">R ' + fmt(p.amount) + "</div>" +
       "</div>";
     }).join("");
@@ -1429,7 +1432,7 @@ async function loadActivity() {
     html += todayPays.length
       ? todayPays.map(function(p) {
           return '<div class="pcard"><div><div class="pname">' + esc(p.debtor_name||"—") + "</div>" +
-            '<div class="pmeta">' + esc(p.receipt_number||"—") + " · " + esc(p.method||"—") + "</div></div>" +
+            '<div class="pmeta">' + esc(p.receipt_number||"—") + " · " + esc(p.method||"—") + (p.payment_time ? " · " + esc(p.payment_time) : "") + "</div></div>" +
             '<div class="pamt">R ' + fmt(p.amount) + "</div></div>";
         }).join("")
       : '<div class="empty-state" style="padding:18px"><p class="et">No payments today.</p></div>';
@@ -1707,7 +1710,7 @@ async function printStatement() {
       "<br><b>Payments Received — Last " + Math.min(10,allPays.length) + " of " + allPays.length + "</b>" +
       (allPays.length
         ? "<table><thead><tr><th>Date</th><th>Receipt No.</th><th>Method</th><th class='tr'>Amount</th></tr></thead><tbody>" +
-          last10P.map(function(x){ var p=x.data(); return "<tr><td>"+esc(p.payment_date||"—")+"</td><td><b>"+esc(p.receipt_number||"—")+"</b></td><td>"+esc(p.method||"—")+"</td><td class='tr green'>R "+fmt(p.amount)+"</td></tr>"; }).join("") +
+          last10P.map(function(x){ var p=x.data(); return "<tr><td>"+esc(p.payment_date||"—")+(p.payment_time?" "+esc(p.payment_time):"")+"</td><td><b>"+esc(p.receipt_number||"—")+"</b></td><td>"+esc(p.method||"—")+"</td><td class='tr green'>R "+fmt(p.amount)+"</td></tr>"; }).join("") +
           "<tr style='border-top:2px solid #000'><td colspan='2'><b>Total Paid: R "+fmt(totalP)+"</b></td><td><b>Balance Due</b></td><td class='tr red'><b>R "+fmt(Math.max(0,totalB-totalP))+"</b></td></tr></tbody></table>"
         : '<p style="font-size:12px;color:#555">No payments recorded.</p>') +
       "<br><b>Call History</b>" +
@@ -1768,9 +1771,9 @@ async function printDailyPayments() {
       '<tr><td><b>Total Collected:</b></td><td class="bold green" style="font-size:15px">R ' + fmt(total) + "</td></tr></table>" +
       '<div class="hr-solid"></div>' +
       (pays.length
-        ? "<table><thead><tr><th>Debtor</th><th>Receipt No.</th><th>Method</th><th class='tr'>Amount</th></tr></thead><tbody>" +
+        ? "<table><thead><tr><th>Debtor</th><th>Receipt No.</th><th>Method</th><th>Time</th><th class='tr'>Amount</th></tr></thead><tbody>" +
           pays.map(function(p){
-            return "<tr><td><b>"+esc(p.debtor_name||"—")+"</b></td><td>"+esc(p.receipt_number||"—")+"</td><td>"+esc(p.method||"—")+"</td><td class='tr green'>R "+fmt(p.amount)+"</td></tr>";
+            return "<tr><td><b>"+esc(p.debtor_name||"—")+"</b></td><td>"+esc(p.receipt_number||"—")+"</td><td>"+esc(p.method||"—")+"</td><td>"+esc(p.payment_time||"—")+"</td><td class='tr green'>R "+fmt(p.amount)+"</td></tr>";
           }).join("") +
           "<tr style='border-top:2px solid #000'><td colspan='3'><b>Total Collected</b></td><td class='tr green'><b>R "+fmt(total)+"</b></td></tr></tbody></table>"
         : '<p style="font-size:12px;color:#555">No payments today.</p>') +
